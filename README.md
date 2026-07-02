@@ -2,7 +2,7 @@
 
 > Empowering conservation efforts in Northeast India through Real-Time Data, Role-Based Collaboration, and Machine Learning.
 
-![BioGuard Banner](https://via.placeholder.com/1200x300/1e293b/10b981?text=BioGuard+NE+India)
+![BioGuard Banner](assets/banner.png)
 
 ---
 
