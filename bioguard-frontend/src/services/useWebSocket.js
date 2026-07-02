@@ -9,7 +9,7 @@ export const useWebSocket = () => {
   const wsRef = useRef(null);
   const timerRef = useRef(null);
 
-  const connect = useCallback(() => {
+  const connect = useCallback(function connectFn() {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
     setStatus('connecting');
 
@@ -31,7 +31,7 @@ export const useWebSocket = () => {
 
     ws.onclose = () => {
       setStatus('reconnecting');
-      timerRef.current = setTimeout(connect, 5000);
+      timerRef.current = setTimeout(connectFn, 5000);
     };
 
     ws.onerror = () => {
