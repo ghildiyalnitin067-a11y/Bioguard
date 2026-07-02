@@ -1,4 +1,6 @@
-
+/* ══════════════════════════════════════════════════
+   SHARED PAGE STYLES — imported via index.css
+   ══════════════════════════════════════════════════ */
 
 .page-root {
   min-height: 100vh;
@@ -8,7 +10,7 @@
   transition: background 0.35s ease;
 }
 
-
+/* ── Page header ── */
 .page-header-bar {
   display: flex;
   align-items: center;
@@ -36,7 +38,7 @@
   flex-wrap: wrap;
 }
 
-
+/* ── Live indicator ── */
 .live-pill {
   display: inline-flex;
   align-items: center;
@@ -58,7 +60,7 @@
 }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-
+/* ── Icon button ── */
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -80,7 +82,7 @@
   border-color: #1a472a;
 }
 
-
+/* ── Panel ── */
 .panel {
   background: var(--bg-card);
   border-radius: 16px;
@@ -121,7 +123,7 @@
 }
 .panel-link:hover { gap: 8px; }
 
-
+/* ── Severity badges ── */
 .sev-badge {
   display: inline-block;
   padding: 2px 8px;
@@ -136,7 +138,7 @@
 .sev-badge.info     { background: rgba(25,118,210,0.15); color: #1976d2; }
 .sev-badge.big      { font-size: 0.78rem; padding: 4px 12px; }
 
-
+/* ── Status badge ── */
 .status-badge {
   display: inline-block;
   padding: 2px 8px;
@@ -149,7 +151,7 @@
 .status-badge.resolved { background: rgba(76,175,80,0.12); color: #4CAF50; }
 .status-badge.big      { font-size: 0.78rem; padding: 4px 12px; }
 
-
+/* ── Filter select ── */
 .filter-select {
   padding: 8px 12px;
   border-radius: 8px;
@@ -163,12 +165,12 @@
 }
 .filter-select:focus { border-color: #4CAF50; }
 
-
+/* ── Map legend ── */
 .map-legend-row { display: flex; align-items: center; gap: 16px; }
 .leg-item { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; color: var(--text-muted); }
 .leg-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
-
+/* ── Responsive ── */
 @media (max-width: 700px) {
   .page-header-bar { padding: 20px 16px 16px; }
   .panel           { margin-left: 16px; margin-right: 16px; }

@@ -1,20 +1,26 @@
+/**
+ * One-off script: assign roles to specific users
+ *   nitinghildiyal2007@gmail.com  → government (admin)
+ *   ghildiyalnitin067@gmail.com   → asha_worker
+ * Run: node scripts/setUserRoles.js
+ */
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const mongoose = require('mongoose');
 
 const ASSIGNMENTS = [
-{
-  email: 'nitinghildiyal2007@gmail.com',
-  role: 'admin',
-  name: 'Nitin Ghildiyal (Govt)',
-  label: 'Government User (Admin)'
-},
-{
-  email: 'ghildiyalnitin067@gmail.com',
-  role: 'asha_worker',
-  name: 'Nitin Ghildiyal (ASHA)',
-  label: 'ASHA / NGO Worker'
-}];
-
+  {
+    email: 'nitinghildiyal2007@gmail.com',
+    role:  'admin',          // "government user" → admin role
+    name:  'Nitin Ghildiyal (Govt)',
+    label: 'Government User (Admin)',
+  },
+  {
+    email: 'ghildiyalnitin067@gmail.com',
+    role:  'asha_worker',
+    name:  'Nitin Ghildiyal (ASHA)',
+    label: 'ASHA / NGO Worker',
+  },
+];
 
 async function run() {
   console.log('[Script] Connecting to MongoDB...');
@@ -33,12 +39,12 @@ async function run() {
         email,
         password: role === 'admin' ? 'Admin@1234' : 'Asha@1234',
         role,
-        state: 'Uttarakhand'
+        state: 'Uttarakhand',
       });
       console.log(`  ✅ Created   → ${email}  [${label}]`);
     } else {
       const prev = user.role;
-      user.role = role;
+      user.role  = role;
       await user.save({ validateBeforeSave: false });
       console.log(`  ✅ Updated   → ${email}  :  ${prev} → ${role}  [${label}]`);
     }
@@ -57,7 +63,7 @@ async function run() {
   process.exit(0);
 }
 
-run().catch((err) => {
+run().catch(err => {
   console.error('[Script] ❌ Error:', err.message);
   process.exit(1);
 });

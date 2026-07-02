@@ -1,4 +1,4 @@
-
+/* ═══ Conflict Monitor Page ═══ */
 
 .cm-stats {
   display: grid; grid-template-columns: repeat(4,1fr);
@@ -62,7 +62,7 @@
   .cm-filters { flex-wrap: wrap; }
 }
 
-
+/* ── Live Map Glowing Pulse Effects ── */
 @keyframes ring-pulse {
   0% { transform: scale(0.5); opacity: 0.8; }
   100% { transform: scale(2.5); opacity: 0; }

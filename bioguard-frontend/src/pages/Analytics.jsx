@@ -2,20 +2,20 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   AreaChart, Area, BarChart, Bar,
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer } from
-'recharts';
+  Tooltip, Legend, ResponsiveContainer,
+} from 'recharts';
 import {
   BarChart2, AlertTriangle,
   RefreshCw, Wifi, WifiOff, Activity, Shield,
-  Zap, Map, FileText } from
-'lucide-react';
-import './Analytics.css';import { jsxDEV as _jsxDEV } from "react/jsx-dev-runtime";
+  Zap, Map, FileText,
+} from 'lucide-react';
+import './Analytics.css';
 
 const getToken = () => localStorage.getItem('bioguard-jwt') || '';
 
 const BASE = (import.meta.env.VITE_API_URL || 'http://localhost:4000').replace(/\/$/, '');
-const API = `${BASE}/api`;
-const WS = BASE.replace(/^http/, 'ws');
+const API  = `${BASE}/api`;
+const WS   = BASE.replace(/^http/, 'ws');
 
 const TOOLTIP_STYLE = {
   background: '#0d1f0d',
@@ -23,100 +23,100 @@ const TOOLTIP_STYLE = {
   borderRadius: 10,
   color: '#e0ffe0',
   fontSize: '0.8rem',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
+  boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
 };
 
 const RISK_COLORS = {
-  critical: '#ff0a54',
-  high: '#ff5400',
-  medium: '#ffdd00',
-  low: '#00f5d4'
+  critical: '#ff0a54', // Neon Pink
+  high:     '#ff5400', // Super Orange
+  medium:   '#ffdd00', // Super Yellow
+  low:      '#00f5d4', // Bright Cyan-Green
 };
 
 const SEVERITY_COLORS = {
-  high: '#ff1744',
+  high:   '#ff1744',
   medium: '#ff9100',
-  low: '#69f0ae'
+  low:    '#69f0ae',
 };
 
-
+/* ── Status badge ── */
 function RiskBadge({ level }) {
   const colors = { critical: '#ff1744', high: '#ff6d00', medium: '#ffd600', low: '#00e676' };
   return (
-    _jsxDEV("span", { style: {
-        background: colors[level] + '22',
-        color: colors[level],
-        border: `1px solid ${colors[level]}55`,
-        borderRadius: 6,
-        padding: '2px 8px',
-        fontSize: '0.72rem',
-        fontWeight: 700,
-        textTransform: 'uppercase',
-        letterSpacing: '0.05em'
-      }, children:
-      level }, void 0, false
-    ));
-
+    <span style={{
+      background: colors[level] + '22',
+      color:      colors[level],
+      border:     `1px solid ${colors[level]}55`,
+      borderRadius: 6,
+      padding: '2px 8px',
+      fontSize: '0.72rem',
+      fontWeight: 700,
+      textTransform: 'uppercase',
+      letterSpacing: '0.05em',
+    }}>
+      {level}
+    </span>
+  );
 }
 
-
+/* ── Live pulse dot ── */
 function PulseDot({ color = '#00e676' }) {
   return (
-    _jsxDEV("span", { style: { position: 'relative', display: 'inline-block', width: 10, height: 10, marginRight: 6 }, children:
-      _jsxDEV("span", { style: {
-          position: 'absolute', inset: 0, borderRadius: '50%',
-          background: color, animation: 'livePulse 1.5s ease-in-out infinite'
-        } }, void 0, false) }, void 0, false
-    ));
-
+    <span style={{ position: 'relative', display: 'inline-block', width: 10, height: 10, marginRight: 6 }}>
+      <span style={{
+        position: 'absolute', inset: 0, borderRadius: '50%',
+        background: color, animation: 'livePulse 1.5s ease-in-out infinite',
+      }}/>
+    </span>
+  );
 }
 
-
+/* ── Mini stat card ── */
 function StatCard({ icon: Icon, label, value, delta, bad, color = '#4CAF50' }) {
   return (
-    _jsxDEV("div", { className: "stat-card-live", children: [
-      _jsxDEV("div", { className: "scl-icon", style: { background: color + '22', color }, children:
-        _jsxDEV(Icon, { size: 20 }, void 0, false) }, void 0, false
-      ),
-      _jsxDEV("div", { className: "scl-body", children: [
-        _jsxDEV("div", { className: "scl-value", children: value }, void 0, false),
-        _jsxDEV("div", { className: "scl-label", children: label }, void 0, false)] }, void 0, true
-      ),
-      delta &&
-      _jsxDEV("div", { className: `scl-delta ${bad ? 'bad' : 'good'}`, children: delta }, void 0, false)] }, void 0, true
-
-    ));
-
+    <div className="stat-card-live">
+      <div className="scl-icon" style={{ background: color + '22', color }}>
+        <Icon size={20} />
+      </div>
+      <div className="scl-body">
+        <div className="scl-value">{value}</div>
+        <div className="scl-label">{label}</div>
+      </div>
+      {delta && (
+        <div className={`scl-delta ${bad ? 'bad' : 'good'}`}>{delta}</div>
+      )}
+    </div>
+  );
 }
 
-
-
-
+/* ════════════════════════════════════════════════
+   MAIN COMPONENT
+════════════════════════════════════════════════ */
 const Analytics = () => {
-  const [data, setData] = useState(null);
-  const [liveFeed, setLiveFeed] = useState(null);
-  const [mlStatus, setMlStatus] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [wsOnline, setWsOnline] = useState(false);
-  const [feed, setFeed] = useState([]);
-  const [lastPoll, setLastPoll] = useState(null);
-  const [polling, setPolling] = useState(false);
-  const wsRef = useRef(null);
+  const [data,       setData]       = useState(null);
+  const [liveFeed,   setLiveFeed]   = useState(null);  // /api/alerts/live-feed
+  const [mlStatus,   setMlStatus]   = useState(null);  // /api/ml/status
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState('');
+  const [wsOnline,   setWsOnline]   = useState(false);
+  const [feed,       setFeed]       = useState([]);
+  const [lastPoll,   setLastPoll]   = useState(null);
+  const [polling,    setPolling]    = useState(false);
+  const wsRef    = useRef(null);
   const timerRef = useRef(null);
 
-
+  /* ── Fetch live data (analysis + live-feed + ml-status in parallel) ── */
   const fetchLive = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     setPolling(true);
     try {
       const [res1, res2, res3] = await Promise.allSettled([
-      fetch(`${API}/analysis/live`, { headers: { Authorization: `Bearer ${getToken()}` } }),
-      fetch(`${API}/alerts/live-feed`, { headers: { Authorization: `Bearer ${getToken()}` } }),
-      fetch(`${API}/ml/status`, { headers: { Authorization: `Bearer ${getToken()}` } })]
-      );
-      if (res1.status === 'fulfilled' && res1.value.ok) setData(await res1.value.json());else
-      if (res1.status === 'fulfilled') throw new Error(`HTTP ${res1.value.status}`);
+        fetch(`${API}/analysis/live`,    { headers: { Authorization: `Bearer ${getToken()}` } }),
+        fetch(`${API}/alerts/live-feed`, { headers: { Authorization: `Bearer ${getToken()}` } }),
+        fetch(`${API}/ml/status`,        { headers: { Authorization: `Bearer ${getToken()}` } }),
+      ]);
+      if (res1.status === 'fulfilled' && res1.value.ok) setData(await res1.value.json());
+      else if (res1.status === 'fulfilled') throw new Error(`HTTP ${res1.value.status}`);
       if (res2.status === 'fulfilled' && res2.value.ok) setLiveFeed(await res2.value.json());
       if (res3.status === 'fulfilled' && res3.value.ok) setMlStatus(await res3.value.json());
       setLastPoll(new Date().toLocaleTimeString());
@@ -129,69 +129,69 @@ const Analytics = () => {
     }
   }, []);
 
-
+  /* ── Initial fetch + polling every 60s ── */
   useEffect(() => {
     fetchLive();
     timerRef.current = setInterval(() => fetchLive(true), 60000);
     return () => clearInterval(timerRef.current);
   }, [fetchLive]);
 
-
+  /* ── WebSocket live feed ── */
   useEffect(() => {
     const connect = () => {
       try {
         const ws = new WebSocket(WS);
         wsRef.current = ws;
-        ws.onopen = () => setWsOnline(true);
-        ws.onclose = () => {setWsOnline(false);setTimeout(connect, 5000);};
+        ws.onopen  = () => setWsOnline(true);
+        ws.onclose = () => { setWsOnline(false); setTimeout(connect, 5000); };
         ws.onerror = () => ws.close();
         ws.onmessage = (e) => {
           try {
             const msg = JSON.parse(e.data);
             if (msg.event !== 'connected') {
-
+              /* Real-time alert batch — add each alert to feed */
               if (msg.event === 'realtime_alert_batch' && msg.data?.alerts) {
-                msg.data.alerts.forEach((a) => {
-                  setFeed((prev) => [{
-                    id: Date.now() + Math.random(),
-                    event: `🛰️ ${a.type} Alert`,
-                    text: a.description?.slice(0, 100) || a.location,
+                msg.data.alerts.forEach(a => {
+                  setFeed(prev => [{
+                    id:       Date.now() + Math.random(),
+                    event:    `🛰️ ${a.type} Alert`,
+                    text:     a.description?.slice(0, 100) || a.location,
                     location: a.location,
                     severity: a.severity,
-                    source: a.notificationType || 'satellite',
-                    time: new Date().toLocaleTimeString()
+                    source:   a.notificationType || 'satellite',
+                    time:     new Date().toLocaleTimeString(),
                   }, ...prev].slice(0, 30));
                 });
               } else if (msg.event === 'realtime_critical_alert') {
-                setFeed((prev) => [{
-                  id: Date.now() + Math.random(),
-                  event: `🔴 CRITICAL: ${msg.data.type}`,
-                  text: msg.data.description?.slice(0, 120) || msg.data.location,
+                setFeed(prev => [{
+                  id:       Date.now() + Math.random(),
+                  event:    `🔴 CRITICAL: ${msg.data.type}`,
+                  text:     msg.data.description?.slice(0, 120) || msg.data.location,
                   location: msg.data.location,
                   severity: 'critical',
-                  time: new Date().toLocaleTimeString()
+                  time:     new Date().toLocaleTimeString(),
                 }, ...prev].slice(0, 30));
-
+                
                 try {
                   window.__bioguardToast?.({
                     severity: 'critical',
                     text: `🛰️ SATELLITE ALERT — ${msg.data.location}`,
                     subtext: msg.data.description?.slice(0, 90),
-                    solutions: msg.data.solutions || ['Avoid area immediately.']
+                    solutions: msg.data.solutions || ['Avoid area immediately.'],
                   });
                 } catch (_) {}
               } else {
-                setFeed((prev) => [{
-                  id: Date.now(),
+                setFeed(prev => [{
+                  id:    Date.now(),
                   event: msg.event,
-                  text: msg.data?.message || msg.event,
-                  time: new Date().toLocaleTimeString(),
-                  lat: msg.data?.lat,
-                  lng: msg.data?.lng
+                  text:  msg.data?.message || msg.event,
+                  time:  new Date().toLocaleTimeString(),
+                  lat:   msg.data?.lat,
+                  lng:   msg.data?.lng,
                 }, ...prev].slice(0, 30));
               }
             }
-
+            /* If predictions updated, refetch */
             if (msg.event === 'predictions_updated') fetchLive(true);
           } catch {}
         };
@@ -201,401 +201,401 @@ const Analytics = () => {
     return () => wsRef.current?.close();
   }, [fetchLive]);
 
-
-  const predictions = data?.predictions?.all || [];
-  const riskDist = predictions.length ? (() => {
+  /* ── Derived data for charts ── */
+  const predictions  = data?.predictions?.all || [];
+  const riskDist     = predictions.length ? (() => {
     const m = { critical: 0, high: 0, medium: 0, low: 0 };
-    predictions.forEach((p) => {m[p.risk_level] = (m[p.risk_level] || 0) + 1;});
+    predictions.forEach(p => { m[p.risk_level] = (m[p.risk_level] || 0) + 1; });
     return Object.entries(m).map(([k, v]) => ({ name: k, value: v, color: RISK_COLORS[k] }));
   })() : [];
 
-
+  /* ── Build a full 14-day scaffold so chart always has all dates ── */
   const mergedTrend = (() => {
     const map = {};
-
+    /* Scaffold last 14 days */
     for (let i = 13; i >= 0; i--) {
-      const d = new Date();d.setDate(d.getDate() - i);
-      const key = `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
       map[key] = { date: key, reports: 0, incidents: 0, liveAlerts: 0 };
     }
-
-    (data?.reports?.trend || []).forEach((r) => {
+    /* Fill from DB trend data */
+    (data?.reports?.trend || []).forEach(r => {
       const key = r.date?.slice(5);
       if (key && map[key]) map[key].reports = r.count;
     });
-    (data?.incidents?.trend || []).forEach((r) => {
+    (data?.incidents?.trend || []).forEach(r => {
       const key = r.date?.slice(5);
-      if (key && map[key]) map[key].incidents = r.count;else
-      if (key) map[key] = { date: key, reports: 0, incidents: r.count, liveAlerts: 0 };
+      if (key && map[key]) map[key].incidents = r.count;
+      else if (key) map[key] = { date: key, reports: 0, incidents: r.count, liveAlerts: 0 };
     });
-
+    /* Add today's live alert count */
     const todayKey = (() => {
       const d = new Date();
-      return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     })();
     if (map[todayKey]) map[todayKey].liveAlerts = liveFeed?.meta?.liveCount || 0;
     return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
   })();
 
-  const reportByType = data?.reports?.byType || [];
+  const reportByType  = data?.reports?.byType  || [];
   const reportByState = data?.incidents?.byState || [];
   const topPredictions = predictions.slice(0, 6);
 
-
+  /* ── Loading skeleton ── */
   if (loading) return (
-    _jsxDEV("div", { className: "page-root an-page", style: { display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '70vh' }, children:
-      _jsxDEV("div", { style: { textAlign: 'center', color: '#4CAF50' }, children: [
-        _jsxDEV("div", { className: "spin-icon", children: _jsxDEV(RefreshCw, { size: 40 }, void 0, false) }, void 0, false),
-        _jsxDEV("p", { style: { marginTop: 16, color: '#888', fontSize: '0.9rem' }, children: "Loading live data from MongoDB…" }, void 0, false)] }, void 0, true
-      ) }, void 0, false
-    ));
+    <div className="page-root an-page" style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'70vh' }}>
+      <div style={{ textAlign:'center', color:'#4CAF50' }}>
+        <div className="spin-icon"><RefreshCw size={40} /></div>
+        <p style={{ marginTop: 16, color:'#888', fontSize:'0.9rem' }}>Loading live data from MongoDB…</p>
+      </div>
+    </div>
+  );
 
-
-
+  /* ── Error state ── */
   if (error && !data) return (
-    _jsxDEV("div", { className: "page-root an-page", style: { display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '70vh' }, children:
-      _jsxDEV("div", { style: { textAlign: 'center' }, children: [
-        _jsxDEV(AlertTriangle, { size: 40, color: "#ff6d00" }, void 0, false),
-        _jsxDEV("p", { style: { color: '#ff6d00', marginTop: 12 }, children: ["Failed to load live data: ", error] }, void 0, true),
-        _jsxDEV("button", { className: "icon-btn", onClick: () => fetchLive(), style: { marginTop: 12 }, children: [
-          _jsxDEV(RefreshCw, { size: 14 }, void 0, false), " Retry"] }, void 0, true
-        )] }, void 0, true
-      ) }, void 0, false
-    ));
-
+    <div className="page-root an-page" style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'70vh' }}>
+      <div style={{ textAlign:'center' }}>
+        <AlertTriangle size={40} color="#ff6d00" />
+        <p style={{ color:'#ff6d00', marginTop:12 }}>Failed to load live data: {error}</p>
+        <button className="icon-btn" onClick={() => fetchLive()} style={{ marginTop:12 }}>
+          <RefreshCw size={14}/> Retry
+        </button>
+      </div>
+    </div>
+  );
 
   const s = data?.summary || {};
 
   return (
-    _jsxDEV("div", { className: "page-root an-page", children: [
+    <div className="page-root an-page">
 
+      {/* ── Header ── */}
+      <div className="page-header-bar">
+        <div>
+          <h1 className="page-title">
+            <PulseDot color="#4CAF50" />
+            Live Prediction Dashboard
+          </h1>
+          <p className="page-sub">
+            Real-time ML predictions driven by community reports &amp; incident data · NE India Biodiversity Network
+          </p>
+        </div>
+        <div className="header-actions">
+          <div className="ws-badge" style={{ color: wsOnline ? '#69f0ae' : '#ff6d00' }}>
+            {wsOnline ? <Wifi size={14}/> : <WifiOff size={14}/>}
+            <span>{wsOnline ? 'Live' : 'Reconnecting'}</span>
+          </div>
+          {lastPoll && (
+            <span style={{ fontSize:'0.75rem', color:'#666' }}>
+              Updated {lastPoll}
+            </span>
+          )}
+          <button
+            className={`icon-btn ${polling ? 'pulsing' : ''}`}
+            onClick={() => fetchLive()}
+            disabled={polling}
+          >
+            <RefreshCw size={14} className={polling ? 'spinning' : ''}/>
+            Refresh
+          </button>
+        </div>
+      </div>
 
-      _jsxDEV("div", { className: "page-header-bar", children: [
-        _jsxDEV("div", { children: [
-          _jsxDEV("h1", { className: "page-title", children: [
-            _jsxDEV(PulseDot, { color: "#4CAF50" }, void 0, false), "Live Prediction Dashboard"] }, void 0, true
+      {/* ── KPI cards ── */}
+      <div className="kpi-grid">
+        <StatCard icon={FileText}       label="Total Reports"        value={s.totalReports    || 0} delta={`+${s.recentReports || 0} this week`}    bad={false} color="#4CAF50" />
+        <StatCard icon={AlertTriangle}  label="Incidents (DB)"       value={s.totalIncidents  || 0} delta={`+${s.recentIncidents || 0} this week`}   bad={s.recentIncidents > 0} color="#ff9100" />
+        <StatCard icon={Zap}            label="Critical Risk Zones"  value={s.criticalZones   || 0} delta={s.criticalZones > 0 ? 'Action needed' : 'All clear'} bad={s.criticalZones > 0} color="#ff1744" />
+        <StatCard icon={Shield}         label="High Risk Zones"      value={s.highRiskZones   || 0} delta="Monitor closely"                           bad={s.highRiskZones > 2}  color="#ff6d00" />
+        <StatCard icon={Activity}       label="Avg ML Risk Score"    value={s.avgRiskScore    || '—'} delta="Across all zones"                        bad={s.avgRiskScore > 0.6} color="#ab47bc" />
+        <StatCard icon={Map}            label="Zones Monitored"      value={predictions.length || 8} delta="NE India"                                 bad={false} color="#29b6f6" />
+      </div>
 
-          ),
-          _jsxDEV("p", { className: "page-sub", children: "Real-time ML predictions driven by community reports & incident data · NE India Biodiversity Network" }, void 0, false
+      {/* ── Main grid ── */}
+      <div className="charts-grid">
 
-          )] }, void 0, true
-        ),
-        _jsxDEV("div", { className: "header-actions", children: [
-          _jsxDEV("div", { className: "ws-badge", style: { color: wsOnline ? '#69f0ae' : '#ff6d00' }, children: [
-            wsOnline ? _jsxDEV(Wifi, { size: 14 }, void 0, false) : _jsxDEV(WifiOff, { size: 14 }, void 0, false),
-            _jsxDEV("span", { children: wsOnline ? 'Live' : 'Reconnecting' }, void 0, false)] }, void 0, true
-          ),
-          lastPoll &&
-          _jsxDEV("span", { style: { fontSize: '0.75rem', color: '#666' }, children: ["Updated ",
-            lastPoll] }, void 0, true
-          ),
+        {/* 1. Report + Incident trend — stacked area */}
+        <div className="chart-panel wide">
+          <div className="panel-hdr">
+            <h3><Activity size={16} style={{marginRight:6,verticalAlign:'middle'}}/>Community Reports &amp; Incidents — 14-Day Trend</h3>
+            <span className="panel-tag live-tag"><PulseDot color="#4CAF50"/>Live from MongoDB</span>
+          </div>
+          {mergedTrend.length > 0 ? (
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={mergedTrend} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gReports" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor="#4CAF50" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#4CAF50" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="gIncidents" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor="#ff6d00" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#ff6d00" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="gLive" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor="#29b6f6" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#29b6f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)"/>
+                <XAxis dataKey="date" tick={{ fill:'#666', fontSize:11 }} axisLine={false} tickLine={false}/>
+                <YAxis tick={{ fill:'#666', fontSize:11 }} axisLine={false} tickLine={false}/>
+                <Tooltip contentStyle={TOOLTIP_STYLE}/>
+                <Legend wrapperStyle={{ fontSize:'0.8rem', color:'#666' }}/>
+                <Area type="monotone" dataKey="reports"    name="Community Reports" stroke="#4CAF50" fill="url(#gReports)"   strokeWidth={2}/>
+                <Area type="monotone" dataKey="incidents"  name="Incidents"         stroke="#ff6d00" fill="url(#gIncidents)" strokeWidth={2}/>
+                <Area type="monotone" dataKey="liveAlerts" name="Live RT Alerts"    stroke="#29b6f6" fill="url(#gLive)"      strokeWidth={1.5} strokeDasharray="4 2"/>
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="no-data-msg">No report/incident data yet. Submit reports to see trend.</div>
+          )}
+        </div>
 
-          _jsxDEV("button", {
-            className: `icon-btn ${polling ? 'pulsing' : ''}`,
-            onClick: () => fetchLive(),
-            disabled: polling, children: [
+        {/* 2. Report type pie */}
+        <div className="chart-panel">
+          <div className="panel-hdr">
+            <h3><FileText size={16} style={{marginRight:6,verticalAlign:'middle'}}/>Report Type Distribution</h3>
+            <span className="panel-tag live-tag"><PulseDot color="#4CAF50"/>Live</span>
+          </div>
+          {reportByType.length > 0 ? (
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie
+                  data={reportByType}
+                  cx="50%" cy="50%"
+                  innerRadius={60} outerRadius={100}
+                  paddingAngle={3} dataKey="value" nameKey="name"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  labelLine={{ stroke:'#444' }}
+                >
+                  {reportByType.map((d, i) => <Cell key={i} fill={d.color}/>)}
+                </Pie>
+                <Tooltip contentStyle={TOOLTIP_STYLE}/>
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="no-data-msg">No reports yet. Pie chart will populate as reports come in.</div>
+          )}
+        </div>
 
-            _jsxDEV(RefreshCw, { size: 14, className: polling ? 'spinning' : '' }, void 0, false), "Refresh"] }, void 0, true
+        {/* 3. ML Risk score distribution pie */}
+        <div className="chart-panel">
+          <div className="panel-hdr">
+            <h3><Shield size={16} style={{marginRight:6,verticalAlign:'middle'}}/>ML Risk Level Distribution</h3>
+            <span className="panel-tag">Across {predictions.length} zones</span>
+          </div>
+          {riskDist.length > 0 ? (
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <defs>
+                  <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                  </filter>
+                </defs>
+                <text x="50%" y="45%" textAnchor="middle" dominantBaseline="middle" style={{ fill: '#ffffff', fontSize: '2.2rem', fontWeight: 900, textShadow: '0 0 10px rgba(255,255,255,0.3)' }}>
+                  {predictions.length}
+                </text>
+                <text x="50%" y="58%" textAnchor="middle" dominantBaseline="middle" style={{ fill: '#888', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  Zones
+                </text>
+                <Pie
+                  data={riskDist}
+                  cx="50%" cy="50%"
+                  innerRadius={80} outerRadius={110}
+                  paddingAngle={6} dataKey="value" nameKey="name"
+                  stroke="none"
+                  filter="url(#neonGlow)"
+                  cornerRadius={8}
+                >
+                  {riskDist.map((d, i) => <Cell key={i} fill={d.color}/>)}
+                </Pie>
+                <Tooltip 
+                  contentStyle={TOOLTIP_STYLE}
+                  itemStyle={{ color: '#fff', fontWeight: 600, textTransform: 'capitalize' }}
+                  formatter={(value, name) => [`${value} Zones`, name]}
+                />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36} 
+                  iconType="circle"
+                  formatter={(value, entry) => <span style={{ color: '#aaa', fontWeight: 600, textTransform: 'capitalize', fontSize: '0.85rem' }}>{value}</span>}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="no-data-msg">ML predictions loading…</div>
+          )}
+        </div>
 
-          )] }, void 0, true
-        )] }, void 0, true
-      ),
+        {/* 4. Incidents by state bar chart */}
+        <div className="chart-panel wide">
+          <div className="panel-hdr">
+            <h3><BarChart2 size={16} style={{marginRight:6,verticalAlign:'middle'}}/>Incidents by State — NE India</h3>
+            <span className="panel-tag live-tag"><PulseDot color="#4CAF50"/>Live from DB</span>
+          </div>
+          {reportByState.length > 0 ? (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={reportByState} margin={{ top:10, right:20, left:-10, bottom:0 }} barGap={4}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)"/>
+                <XAxis dataKey="state" tick={{ fill:'#666', fontSize:11 }} axisLine={false} tickLine={false}/>
+                <YAxis tick={{ fill:'#666', fontSize:11 }} axisLine={false} tickLine={false}/>
+                <Tooltip contentStyle={TOOLTIP_STYLE}/>
+                <Legend wrapperStyle={{ fontSize:'0.8rem', color:'#666' }}/>
+                <Bar dataKey="count"        name="Incidents"       fill="#ff6d00" radius={[4,4,0,0]}/>
+                <Bar dataKey="avgCasualties" name="Avg Casualties" fill="#ef5350" radius={[4,4,0,0]}/>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="no-data-msg">No incident data logged yet.</div>
+          )}
+        </div>
 
+      </div>
 
-      _jsxDEV("div", { className: "kpi-grid", children: [
-        _jsxDEV(StatCard, { icon: FileText, label: "Total Reports", value: s.totalReports || 0, delta: `+${s.recentReports || 0} this week`, bad: false, color: "#4CAF50" }, void 0, false),
-        _jsxDEV(StatCard, { icon: AlertTriangle, label: "Incidents (DB)", value: s.totalIncidents || 0, delta: `+${s.recentIncidents || 0} this week`, bad: s.recentIncidents > 0, color: "#ff9100" }, void 0, false),
-        _jsxDEV(StatCard, { icon: Zap, label: "Critical Risk Zones", value: s.criticalZones || 0, delta: s.criticalZones > 0 ? 'Action needed' : 'All clear', bad: s.criticalZones > 0, color: "#ff1744" }, void 0, false),
-        _jsxDEV(StatCard, { icon: Shield, label: "High Risk Zones", value: s.highRiskZones || 0, delta: "Monitor closely", bad: s.highRiskZones > 2, color: "#ff6d00" }, void 0, false),
-        _jsxDEV(StatCard, { icon: Activity, label: "Avg ML Risk Score", value: s.avgRiskScore || '—', delta: "Across all zones", bad: s.avgRiskScore > 0.6, color: "#ab47bc" }, void 0, false),
-        _jsxDEV(StatCard, { icon: Map, label: "Zones Monitored", value: predictions.length || 8, delta: "NE India", bad: false, color: "#29b6f6" }, void 0, false)] }, void 0, true
-      ),
-
-
-      _jsxDEV("div", { className: "charts-grid", children: [
-
-
-        _jsxDEV("div", { className: "chart-panel wide", children: [
-          _jsxDEV("div", { className: "panel-hdr", children: [
-            _jsxDEV("h3", { children: [_jsxDEV(Activity, { size: 16, style: { marginRight: 6, verticalAlign: 'middle' } }, void 0, false), "Community Reports & Incidents — 14-Day Trend"] }, void 0, true),
-            _jsxDEV("span", { className: "panel-tag live-tag", children: [_jsxDEV(PulseDot, { color: "#4CAF50" }, void 0, false), "Live from MongoDB"] }, void 0, true)] }, void 0, true
-          ),
-          mergedTrend.length > 0 ?
-          _jsxDEV(ResponsiveContainer, { width: "100%", height: 260, children:
-            _jsxDEV(AreaChart, { data: mergedTrend, margin: { top: 10, right: 20, left: -10, bottom: 0 }, children: [
-              _jsxDEV("defs", { children: [
-                _jsxDEV("linearGradient", { id: "gReports", x1: "0", y1: "0", x2: "0", y2: "1", children: [
-                  _jsxDEV("stop", { offset: "5%", stopColor: "#4CAF50", stopOpacity: 0.4 }, void 0, false),
-                  _jsxDEV("stop", { offset: "95%", stopColor: "#4CAF50", stopOpacity: 0 }, void 0, false)] }, void 0, true
-                ),
-                _jsxDEV("linearGradient", { id: "gIncidents", x1: "0", y1: "0", x2: "0", y2: "1", children: [
-                  _jsxDEV("stop", { offset: "5%", stopColor: "#ff6d00", stopOpacity: 0.4 }, void 0, false),
-                  _jsxDEV("stop", { offset: "95%", stopColor: "#ff6d00", stopOpacity: 0 }, void 0, false)] }, void 0, true
-                ),
-                _jsxDEV("linearGradient", { id: "gLive", x1: "0", y1: "0", x2: "0", y2: "1", children: [
-                  _jsxDEV("stop", { offset: "5%", stopColor: "#29b6f6", stopOpacity: 0.4 }, void 0, false),
-                  _jsxDEV("stop", { offset: "95%", stopColor: "#29b6f6", stopOpacity: 0 }, void 0, false)] }, void 0, true
-                )] }, void 0, true
-              ),
-              _jsxDEV(CartesianGrid, { strokeDasharray: "3 3", stroke: "rgba(255,255,255,0.05)" }, void 0, false),
-              _jsxDEV(XAxis, { dataKey: "date", tick: { fill: '#666', fontSize: 11 }, axisLine: false, tickLine: false }, void 0, false),
-              _jsxDEV(YAxis, { tick: { fill: '#666', fontSize: 11 }, axisLine: false, tickLine: false }, void 0, false),
-              _jsxDEV(Tooltip, { contentStyle: TOOLTIP_STYLE }, void 0, false),
-              _jsxDEV(Legend, { wrapperStyle: { fontSize: '0.8rem', color: '#666' } }, void 0, false),
-              _jsxDEV(Area, { type: "monotone", dataKey: "reports", name: "Community Reports", stroke: "#4CAF50", fill: "url(#gReports)", strokeWidth: 2 }, void 0, false),
-              _jsxDEV(Area, { type: "monotone", dataKey: "incidents", name: "Incidents", stroke: "#ff6d00", fill: "url(#gIncidents)", strokeWidth: 2 }, void 0, false),
-              _jsxDEV(Area, { type: "monotone", dataKey: "liveAlerts", name: "Live RT Alerts", stroke: "#29b6f6", fill: "url(#gLive)", strokeWidth: 1.5, strokeDasharray: "4 2" }, void 0, false)] }, void 0, true
-            ) }, void 0, false
-          ) :
-
-          _jsxDEV("div", { className: "no-data-msg", children: "No report/incident data yet. Submit reports to see trend." }, void 0, false)] }, void 0, true
-
-        ),
-
-
-        _jsxDEV("div", { className: "chart-panel", children: [
-          _jsxDEV("div", { className: "panel-hdr", children: [
-            _jsxDEV("h3", { children: [_jsxDEV(FileText, { size: 16, style: { marginRight: 6, verticalAlign: 'middle' } }, void 0, false), "Report Type Distribution"] }, void 0, true),
-            _jsxDEV("span", { className: "panel-tag live-tag", children: [_jsxDEV(PulseDot, { color: "#4CAF50" }, void 0, false), "Live"] }, void 0, true)] }, void 0, true
-          ),
-          reportByType.length > 0 ?
-          _jsxDEV(ResponsiveContainer, { width: "100%", height: 260, children:
-            _jsxDEV(PieChart, { children: [
-              _jsxDEV(Pie, {
-                data: reportByType,
-                cx: "50%", cy: "50%",
-                innerRadius: 60, outerRadius: 100,
-                paddingAngle: 3, dataKey: "value", nameKey: "name",
-                label: ({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`,
-                labelLine: { stroke: '#444' }, children:
-
-                reportByType.map((d, i) => _jsxDEV(Cell, { fill: d.color }, i, false)) }, void 0, false
-              ),
-              _jsxDEV(Tooltip, { contentStyle: TOOLTIP_STYLE }, void 0, false)] }, void 0, true
-            ) }, void 0, false
-          ) :
-
-          _jsxDEV("div", { className: "no-data-msg", children: "No reports yet. Pie chart will populate as reports come in." }, void 0, false)] }, void 0, true
-
-        ),
-
-
-        _jsxDEV("div", { className: "chart-panel", children: [
-          _jsxDEV("div", { className: "panel-hdr", children: [
-            _jsxDEV("h3", { children: [_jsxDEV(Shield, { size: 16, style: { marginRight: 6, verticalAlign: 'middle' } }, void 0, false), "ML Risk Level Distribution"] }, void 0, true),
-            _jsxDEV("span", { className: "panel-tag", children: ["Across ", predictions.length, " zones"] }, void 0, true)] }, void 0, true
-          ),
-          riskDist.length > 0 ?
-          _jsxDEV(ResponsiveContainer, { width: "100%", height: 260, children:
-            _jsxDEV(PieChart, { children: [
-              _jsxDEV("defs", { children:
-                _jsxDEV("filter", { id: "neonGlow", x: "-20%", y: "-20%", width: "140%", height: "140%", children: [
-                  _jsxDEV("feGaussianBlur", { stdDeviation: "3", result: "blur" }, void 0, false),
-                  _jsxDEV("feComposite", { in: "SourceGraphic", in2: "blur", operator: "over" }, void 0, false)] }, void 0, true
-                ) }, void 0, false
-              ),
-              _jsxDEV("text", { x: "50%", y: "45%", textAnchor: "middle", dominantBaseline: "middle", style: { fill: '#ffffff', fontSize: '2.2rem', fontWeight: 900, textShadow: '0 0 10px rgba(255,255,255,0.3)' }, children:
-                predictions.length }, void 0, false
-              ),
-              _jsxDEV("text", { x: "50%", y: "58%", textAnchor: "middle", dominantBaseline: "middle", style: { fill: '#888', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }, children: "Zones" }, void 0, false
-
-              ),
-              _jsxDEV(Pie, {
-                data: riskDist,
-                cx: "50%", cy: "50%",
-                innerRadius: 80, outerRadius: 110,
-                paddingAngle: 6, dataKey: "value", nameKey: "name",
-                stroke: "none",
-                filter: "url(#neonGlow)",
-                cornerRadius: 8, children:
-
-                riskDist.map((d, i) => _jsxDEV(Cell, { fill: d.color }, i, false)) }, void 0, false
-              ),
-              _jsxDEV(Tooltip, {
-                contentStyle: TOOLTIP_STYLE,
-                itemStyle: { color: '#fff', fontWeight: 600, textTransform: 'capitalize' },
-                formatter: (value, name) => [`${value} Zones`, name] }, void 0, false
-              ),
-              _jsxDEV(Legend, {
-                verticalAlign: "bottom",
-                height: 36,
-                iconType: "circle",
-                formatter: (value, entry) => _jsxDEV("span", { style: { color: '#aaa', fontWeight: 600, textTransform: 'capitalize', fontSize: '0.85rem' }, children: value }, void 0, false) }, void 0, false
-              )] }, void 0, true
-            ) }, void 0, false
-          ) :
-
-          _jsxDEV("div", { className: "no-data-msg", children: "ML predictions loading…" }, void 0, false)] }, void 0, true
-
-        ),
-
-
-        _jsxDEV("div", { className: "chart-panel wide", children: [
-          _jsxDEV("div", { className: "panel-hdr", children: [
-            _jsxDEV("h3", { children: [_jsxDEV(BarChart2, { size: 16, style: { marginRight: 6, verticalAlign: 'middle' } }, void 0, false), "Incidents by State — NE India"] }, void 0, true),
-            _jsxDEV("span", { className: "panel-tag live-tag", children: [_jsxDEV(PulseDot, { color: "#4CAF50" }, void 0, false), "Live from DB"] }, void 0, true)] }, void 0, true
-          ),
-          reportByState.length > 0 ?
-          _jsxDEV(ResponsiveContainer, { width: "100%", height: 260, children:
-            _jsxDEV(BarChart, { data: reportByState, margin: { top: 10, right: 20, left: -10, bottom: 0 }, barGap: 4, children: [
-              _jsxDEV(CartesianGrid, { strokeDasharray: "3 3", stroke: "rgba(255,255,255,0.05)" }, void 0, false),
-              _jsxDEV(XAxis, { dataKey: "state", tick: { fill: '#666', fontSize: 11 }, axisLine: false, tickLine: false }, void 0, false),
-              _jsxDEV(YAxis, { tick: { fill: '#666', fontSize: 11 }, axisLine: false, tickLine: false }, void 0, false),
-              _jsxDEV(Tooltip, { contentStyle: TOOLTIP_STYLE }, void 0, false),
-              _jsxDEV(Legend, { wrapperStyle: { fontSize: '0.8rem', color: '#666' } }, void 0, false),
-              _jsxDEV(Bar, { dataKey: "count", name: "Incidents", fill: "#ff6d00", radius: [4, 4, 0, 0] }, void 0, false),
-              _jsxDEV(Bar, { dataKey: "avgCasualties", name: "Avg Casualties", fill: "#ef5350", radius: [4, 4, 0, 0] }, void 0, false)] }, void 0, true
-            ) }, void 0, false
-          ) :
-
-          _jsxDEV("div", { className: "no-data-msg", children: "No incident data logged yet." }, void 0, false)] }, void 0, true
-
-        )] }, void 0, true
-
-      ),
-
-
-      mlStatus && (mlStatus.realtime_alert_boosts_active > 0 || mlStatus.community_report_regions_active > 0) &&
-      _jsxDEV("div", { style: {
+      {/* ── ML Status Banner ── */}
+      {mlStatus && (mlStatus.realtime_alert_boosts_active > 0 || mlStatus.community_report_regions_active > 0) && (
+        <div style={{
           background: 'linear-gradient(135deg, rgba(76,175,80,0.08), rgba(171,71,188,0.08))',
           border: '1px solid rgba(76,175,80,0.2)', borderRadius: 14,
           padding: '12px 18px', display: 'flex', gap: 24, flexWrap: 'wrap',
-          alignItems: 'center', marginBottom: 20
-        }, children: [
-        _jsxDEV("div", { style: { display: 'flex', alignItems: 'center', gap: 6 }, children: [
-          _jsxDEV(PulseDot, { color: "#4CAF50" }, void 0, false),
-          _jsxDEV("span", { style: { fontSize: '0.78rem', color: '#81c784', fontWeight: 700 }, children: "ML Real-Time Signals Active" }, void 0, false)] }, void 0, true
-        ),
-        mlStatus.realtime_alert_boosts_active > 0 &&
-        _jsxDEV("span", { style: { fontSize: '0.75rem', color: '#888' }, children: ["🛰️ ",
-          _jsxDEV("strong", { style: { color: '#4CAF50' }, children: mlStatus.realtime_alert_boosts_active }, void 0, false), " zones with satellite/GBIF boosts"] }, void 0, true
-        ),
+          alignItems: 'center', marginBottom: 20,
+        }}>
+          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+            <PulseDot color="#4CAF50"/>
+            <span style={{ fontSize:'0.78rem', color:'#81c784', fontWeight:700 }}>ML Real-Time Signals Active</span>
+          </div>
+          {mlStatus.realtime_alert_boosts_active > 0 && (
+            <span style={{ fontSize:'0.75rem', color:'#888' }}>
+              🛰️ <strong style={{color:'#4CAF50'}}>{mlStatus.realtime_alert_boosts_active}</strong> zones with satellite/GBIF boosts
+            </span>
+          )}
+          {mlStatus.community_report_regions_active > 0 && (
+            <span style={{ fontSize:'0.75rem', color:'#888' }}>
+              📋 <strong style={{color:'#ab47bc'}}>{mlStatus.community_report_regions_active}</strong> regions with community report signals
+            </span>
+          )}
+          {mlStatus.live_alert_pipeline?.last_polled && (
+            <span style={{ fontSize:'0.72rem', color:'#555', marginLeft:'auto' }}>
+              Last real-time poll: {new Date(mlStatus.live_alert_pipeline.last_polled).toLocaleTimeString()}
+            </span>
+          )}
+        </div>
+      )}
 
-        mlStatus.community_report_regions_active > 0 &&
-        _jsxDEV("span", { style: { fontSize: '0.75rem', color: '#888' }, children: ["📋 ",
-          _jsxDEV("strong", { style: { color: '#ab47bc' }, children: mlStatus.community_report_regions_active }, void 0, false), " regions with community report signals"] }, void 0, true
-        ),
+      {/* ── ML Predictions table ── */}
+      <div className="predictions-section">
+        <div className="panel-hdr" style={{ marginBottom: 16 }}>
+          <h3><Zap size={16} style={{marginRight:6,verticalAlign:'middle'}}/>ML Zone Risk Predictions</h3>
+          <span className="panel-tag live-tag">
+            <PulseDot color="#ab47bc"/>
+            Driven by Live Reports + Incidents + Real-Time GBIF/GFW + Community Signals
+          </span>
+        </div>
+        <div className="pred-grid">
+          {topPredictions.length > 0 ? topPredictions.map(p => (
+            <div className={`pred-card pred-${p.risk_level}`} key={p.id}>
+              <div className="pred-card-top">
+                <div className="pred-zone">{p.zone_name}</div>
+                <RiskBadge level={p.risk_level} />
+              </div>
+              {/* Real-time signal badges */}
+              <div style={{ display:'flex', gap:4, flexWrap:'wrap', marginBottom:6 }}>
+                {p.data_sources?.realtime_alert_active && (
+                  <span style={{ fontSize:'0.62rem', fontWeight:800, color:'#4CAF50',
+                    background:'rgba(76,175,80,0.12)', border:'1px solid rgba(76,175,80,0.25)',
+                    borderRadius:100, padding:'1px 7px' }}>🛰️ RT Alert</span>
+                )}
+                {p.data_sources?.community_reports_signal && (
+                  <span style={{ fontSize:'0.62rem', fontWeight:800, color:'#ab47bc',
+                    background:'rgba(171,71,188,0.12)', border:'1px solid rgba(171,71,188,0.25)',
+                    borderRadius:100, padding:'1px 7px' }}>📋 Community</span>
+                )}
+              </div>
+              <div className="pred-threat">{p.threat_type}</div>
+              <div className="pred-score-bar">
+                <div
+                  className="pred-score-fill"
+                  style={{
+                    width: `${(p.risk_score * 100).toFixed(0)}%`,
+                    background: RISK_COLORS[p.risk_level],
+                  }}
+                />
+                <span>{(p.risk_score * 100).toFixed(0)}/100</span>
+              </div>
+              <p className="pred-text">{p.prediction}</p>
+              <div className="pred-factors">
+                <span title="Zone base risk">🏔 {(p.factors?.base_zone_risk * 100 || 0).toFixed(0)}%</span>
+                <span title="Live report frequency">📋 {(p.factors?.live_report_freq * 100 || 0).toFixed(0)}%</span>
+                {p.factors?.realtime_alert_boost > 0 && (
+                  <span title="Real-time alert boost" style={{color:'#4CAF50'}}>🛰️ +{(p.factors.realtime_alert_boost * 100).toFixed(0)}%</span>
+                )}
+                {p.factors?.community_report_boost > 0 && (
+                  <span title="Community report boost" style={{color:'#ab47bc'}}>👥 +{(p.factors.community_report_boost * 100).toFixed(0)}%</span>
+                )}
+                <span title="Confidence">✓ {(p.confidence * 100).toFixed(0)}% conf</span>
+              </div>
+            </div>
+          )) : (
+            <div className="no-data-msg" style={{ gridColumn:'1/-1' }}>
+              ML predictions will appear here once zones are computed.
+            </div>
+          )}
+        </div>
+      </div>
 
-        mlStatus.live_alert_pipeline?.last_polled &&
-        _jsxDEV("span", { style: { fontSize: '0.72rem', color: '#555', marginLeft: 'auto' }, children: ["Last real-time poll: ",
-          new Date(mlStatus.live_alert_pipeline.last_polled).toLocaleTimeString()] }, void 0, true
-        )] }, void 0, true
-
-      ),
-
-
-
-      _jsxDEV("div", { className: "predictions-section", children: [
-        _jsxDEV("div", { className: "panel-hdr", style: { marginBottom: 16 }, children: [
-          _jsxDEV("h3", { children: [_jsxDEV(Zap, { size: 16, style: { marginRight: 6, verticalAlign: 'middle' } }, void 0, false), "ML Zone Risk Predictions"] }, void 0, true),
-          _jsxDEV("span", { className: "panel-tag live-tag", children: [
-            _jsxDEV(PulseDot, { color: "#ab47bc" }, void 0, false), "Driven by Live Reports + Incidents + Real-Time GBIF/GFW + Community Signals"] }, void 0, true
-
-          )] }, void 0, true
-        ),
-        _jsxDEV("div", { className: "pred-grid", children:
-          topPredictions.length > 0 ? topPredictions.map((p) =>
-          _jsxDEV("div", { className: `pred-card pred-${p.risk_level}`, children: [
-            _jsxDEV("div", { className: "pred-card-top", children: [
-              _jsxDEV("div", { className: "pred-zone", children: p.zone_name }, void 0, false),
-              _jsxDEV(RiskBadge, { level: p.risk_level }, void 0, false)] }, void 0, true
-            ),
-
-            _jsxDEV("div", { style: { display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }, children: [
-              p.data_sources?.realtime_alert_active &&
-              _jsxDEV("span", { style: { fontSize: '0.62rem', fontWeight: 800, color: '#4CAF50',
-                  background: 'rgba(76,175,80,0.12)', border: '1px solid rgba(76,175,80,0.25)',
-                  borderRadius: 100, padding: '1px 7px' }, children: "🛰️ RT Alert" }, void 0, false),
-
-              p.data_sources?.community_reports_signal &&
-              _jsxDEV("span", { style: { fontSize: '0.62rem', fontWeight: 800, color: '#ab47bc',
-                  background: 'rgba(171,71,188,0.12)', border: '1px solid rgba(171,71,188,0.25)',
-                  borderRadius: 100, padding: '1px 7px' }, children: "📋 Community" }, void 0, false)] }, void 0, true
-
-            ),
-            _jsxDEV("div", { className: "pred-threat", children: p.threat_type }, void 0, false),
-            _jsxDEV("div", { className: "pred-score-bar", children: [
-              _jsxDEV("div", {
-                className: "pred-score-fill",
-                style: {
-                  width: `${(p.risk_score * 100).toFixed(0)}%`,
-                  background: RISK_COLORS[p.risk_level]
-                } }, void 0, false
-              ),
-              _jsxDEV("span", { children: [(p.risk_score * 100).toFixed(0), "/100"] }, void 0, true)] }, void 0, true
-            ),
-            _jsxDEV("p", { className: "pred-text", children: p.prediction }, void 0, false),
-            _jsxDEV("div", { className: "pred-factors", children: [
-              _jsxDEV("span", { title: "Zone base risk", children: ["🏔 ", (p.factors?.base_zone_risk * 100 || 0).toFixed(0), "%"] }, void 0, true),
-              _jsxDEV("span", { title: "Live report frequency", children: ["📋 ", (p.factors?.live_report_freq * 100 || 0).toFixed(0), "%"] }, void 0, true),
-              p.factors?.realtime_alert_boost > 0 &&
-              _jsxDEV("span", { title: "Real-time alert boost", style: { color: '#4CAF50' }, children: ["🛰️ +", (p.factors.realtime_alert_boost * 100).toFixed(0), "%"] }, void 0, true),
-
-              p.factors?.community_report_boost > 0 &&
-              _jsxDEV("span", { title: "Community report boost", style: { color: '#ab47bc' }, children: ["👥 +", (p.factors.community_report_boost * 100).toFixed(0), "%"] }, void 0, true),
-
-              _jsxDEV("span", { title: "Confidence", children: ["✓ ", (p.confidence * 100).toFixed(0), "% conf"] }, void 0, true)] }, void 0, true
-            )] }, p.id, true
-          )
-          ) :
-          _jsxDEV("div", { className: "no-data-msg", style: { gridColumn: '1/-1' }, children: "ML predictions will appear here once zones are computed." }, void 0, false
-
-          ) }, void 0, false
-
-        )] }, void 0, true
-      ),
-
-
-      _jsxDEV("div", { className: "live-feed-section", children: [
-        _jsxDEV("div", { className: "panel-hdr", style: { marginBottom: 12 }, children: [
-          _jsxDEV("h3", { children: [
-            _jsxDEV(PulseDot, { color: wsOnline ? '#4CAF50' : '#ff6d00' }, void 0, false), "Real-Time Event Feed"] }, void 0, true
-
-          ),
-          _jsxDEV("span", { className: "panel-tag", children: ["WebSocket · GBIF/GFW/Satellite/Patrol · ",
-            liveFeed?.meta?.liveCount || 0, " live alerts polled"] }, void 0, true
-          )] }, void 0, true
-        ),
-        _jsxDEV("div", { className: "feed-list", children: [
-          feed.length === 0 &&
-          _jsxDEV("div", { className: "feed-item feed-empty", children:
-            _jsxDEV("span", { children: ["Waiting for live events… ", wsOnline ? '(connected — real-time alerts poll every 15 min)' : '(connecting…)'] }, void 0, true) }, void 0, false
-          ),
-
-          feed.map((item) =>
-          _jsxDEV("div", { className: "feed-item", style: {
+      {/* ── Live Real-Time Alert Feed ── */}
+      <div className="live-feed-section">
+        <div className="panel-hdr" style={{ marginBottom: 12 }}>
+          <h3>
+            <PulseDot color={wsOnline ? '#4CAF50' : '#ff6d00'} />
+            Real-Time Event Feed
+          </h3>
+          <span className="panel-tag">
+            WebSocket · GBIF/GFW/Satellite/Patrol · {liveFeed?.meta?.liveCount || 0} live alerts polled
+          </span>
+        </div>
+        <div className="feed-list">
+          {feed.length === 0 && (
+            <div className="feed-item feed-empty">
+              <span>Waiting for live events… {wsOnline ? '(connected — real-time alerts poll every 15 min)' : '(connecting…)'}</span>
+            </div>
+          )}
+          {feed.map(item => (
+            <div className="feed-item" key={item.id} style={{
               borderLeft: item.severity === 'critical' ? '3px solid #ff1744' :
-              item.severity === 'warning' ? '3px solid #ff9100' : '3px solid #29b6f6'
-            }, children: [
-            _jsxDEV("span", { className: "feed-time", children: item.time }, void 0, false),
-            _jsxDEV("span", { className: "feed-event", style: {
+                          item.severity === 'warning'  ? '3px solid #ff9100' : '3px solid #29b6f6',
+            }}>
+              <span className="feed-time">{item.time}</span>
+              <span className="feed-event" style={{
                 color: item.severity === 'critical' ? '#ff5252' :
-                item.severity === 'warning' ? '#ffb74d' : '#64b5f6'
-              }, children: item.event }, void 0, false),
-            _jsxDEV("span", { className: "feed-text", children: item.text }, void 0, false),
-            item.location &&
-            _jsxDEV("span", { style: { fontSize: '0.7rem', color: '#555', marginLeft: 'auto', whiteSpace: 'nowrap' }, children: ["📍 ",
-              item.location.split('—')[0]?.trim().slice(0, 30)] }, void 0, true
-            )] }, item.id, true
-
-          )
-          ),
-
-          feed.length === 0 && liveFeed?.liveAlerts?.slice(0, 5).map((a, i) =>
-          _jsxDEV("div", { className: "feed-item", style: {
+                       item.severity === 'warning'  ? '#ffb74d' : '#64b5f6',
+              }}>{item.event}</span>
+              <span className="feed-text">{item.text}</span>
+              {item.location && (
+                <span style={{ fontSize:'0.7rem', color:'#555', marginLeft:'auto', whiteSpace:'nowrap' }}>
+                  📍 {item.location.split('—')[0]?.trim().slice(0, 30)}
+                </span>
+              )}
+            </div>
+          ))}
+          {/* Show cached live alerts from last poll */}
+          {feed.length === 0 && liveFeed?.liveAlerts?.slice(0,5).map((a, i) => (
+            <div className="feed-item" key={`cached-${i}`} style={{
               borderLeft: a.severity === 'critical' ? '3px solid #ff174488' : '3px solid #ff910088',
-              opacity: 0.7
-            }, children: [
-            _jsxDEV("span", { className: "feed-time", children: a.polledAt ? new Date(a.polledAt).toLocaleTimeString() : '—' }, void 0, false),
-            _jsxDEV("span", { className: "feed-event", style: { color: '#888' }, children: ["🛰️ ", a.type] }, void 0, true),
-            _jsxDEV("span", { className: "feed-text", children: a.description?.slice(0, 100) }, void 0, false)] }, `cached-${i}`, true
-          )
-          )] }, void 0, true
-        )] }, void 0, true
-      )] }, void 0, true
+              opacity: 0.7,
+            }}>
+              <span className="feed-time">{a.polledAt ? new Date(a.polledAt).toLocaleTimeString() : '—'}</span>
+              <span className="feed-event" style={{ color: '#888' }}>🛰️ {a.type}</span>
+              <span className="feed-text">{a.description?.slice(0, 100)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
 
-    ));
-
+    </div>
+  );
 };
 
 export default Analytics;

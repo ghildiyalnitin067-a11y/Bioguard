@@ -24,9 +24,11 @@ html, body {
   flex: 1;
 }
 
-
+/* ═══════════════════════════════════════════
+   GLOBAL THEME VARIABLES — Redesigned
+   ═══════════════════════════════════════════ */
 :root {
-  
+  /* ── Brand (unchanged) ── */
   --primary-green:    #16a34a;
   --primary-dark:     #0d3320;
   --accent-green:     #22c55e;
@@ -36,7 +38,8 @@ html, body {
   --glass-border:     rgba(255,255,255,0.22);
   --transition-smooth: all 0.3s cubic-bezier(0.25,0.8,0.25,1);
 
-  
+  /* ════ LIGHT THEME ════
+     Clean white editorial — emerald accents, deep ink text */
   --bg-page:          #f7faf7;
   --bg-card:          #ffffff;
   --bg-card-alt:      #f1f6f1;
@@ -58,7 +61,8 @@ html, body {
   --input-border:     rgba(0,0,0,0.13);
 }
 
-
+/* ════ DARK THEME ════
+   Deep forest night — vivid lime on rich obsidian green */
 [data-theme="dark"] {
   --bg-page:          #0c1a0e;
   --bg-card:          #142018;
@@ -87,7 +91,7 @@ html, body {
   transition: background 0.35s ease, color 0.35s ease;
 }
 
-
+/* ── Global Live Map Glowing Pulse Effects ── */
 @keyframes ring-pulse {
   0% { transform: scale(0.5); opacity: 0.8; }
   100% { transform: scale(3.0); opacity: 0; }

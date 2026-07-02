@@ -1,4 +1,6 @@
-
+/* ═══════════════════════════════════════════
+   Alerts Page — with Village Advisory Panel
+═══════════════════════════════════════════ */
 
 @keyframes spin {
   from { transform: rotate(0deg); }
@@ -23,7 +25,7 @@
 
 .spinning { animation: spin 0.9s linear infinite; }
 
-
+/* ── Severity counters ── */
 .sev-counters {
   display: flex; gap: 12px; padding: 0 32px 20px; flex-wrap: wrap;
 }
@@ -37,7 +39,7 @@
 .sc-num { font-size: 1.5rem; font-weight: 800; color: var(--sc); line-height: 1; }
 .sc-lbl { font-size: 0.72rem; font-weight: 600; color: #888; text-transform: capitalize; margin-top: 3px; }
 
-
+/* ── Filter bar ── */
 .filter-bar {
   display: flex; align-items: center; gap: 12px; padding: 0 32px 20px; flex-wrap: wrap;
 }
@@ -57,16 +59,16 @@
   font-size: 0.82rem; cursor: pointer; outline: none;
 }
 
-
+/* ── Map strip ── */
 .alert-map-strip { margin: 0 32px 20px; border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.07); }
 .alerts-map { height: 320px; width: 100%; }
 
-
+/* ── Main layout ── */
 .alerts-layout { display: grid; grid-template-columns: 1fr; gap: 0; padding: 0 32px; }
 .alerts-layout.has-detail { grid-template-columns: 1fr 400px; gap: 20px; }
 .alerts-list-col { display: flex; flex-direction: column; gap: 14px; }
 
-
+/* ── Alert cards ── */
 .alert-card {
   display: flex; align-items: stretch;
   background: rgba(255,255,255,0.03);
@@ -79,7 +81,7 @@
 .alert-card.sel  { border-color: rgba(76,175,80,0.5); background: rgba(76,175,80,0.05); }
 .alert-card.live-card { animation: liveSlideIn 0.5s cubic-bezier(0.16,1,0.3,1) both; }
 
-
+/* ── Create Alert button ── */
 .create-alert-btn {
   background: rgba(255,145,0,0.12) !important;
   color: #ff9100 !important;
@@ -108,7 +110,7 @@
 .ac-desc { font-size: 0.81rem; color: #777; line-height: 1.5; margin-bottom: 8px; }
 .ac-action { font-size: 0.78rem; font-weight: 600; color: #4CAF50; display: flex; align-items: center; gap: 3px; }
 
-
+/* ── Advisory chip on card ── */
 .advisory-chip {
   display: flex; align-items: center; gap: 3px;
   font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 20px;
@@ -116,7 +118,7 @@
   border: 1px solid rgba(76,175,80,0.25);
 }
 
-
+/* ── Status & severity badges ── */
 .sev-badge {
   padding: 2px 9px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.05em;
@@ -139,7 +141,9 @@
   display: flex; flex-direction: column; align-items: center; gap: 12px; font-size: 0.9rem;
 }
 
-
+/* ════════════════════════════════════
+   DETAIL PANEL
+════════════════════════════════════ */
 .detail-panel {
   background: rgba(255,255,255,0.025);
   border: 1px solid rgba(255,255,255,0.07);
@@ -183,7 +187,9 @@
 .dp-mini-map { margin: 0 18px 18px; border-radius: 10px; overflow: hidden; }
 .detail-map { height: 180px; width: 100%; }
 
-
+/* ════════════════════════════════════
+   VILLAGE ADVISORY CARD
+════════════════════════════════════ */
 .village-advisory {
   margin: 0 18px;
   border-radius: 14px;
@@ -192,7 +198,7 @@
   animation: fadeIn 0.4s ease;
 }
 
-
+/* Advisory header */
 .va-header {
   display: flex; justify-content: space-between; align-items: center;
   padding: 10px 14px;
@@ -206,7 +212,7 @@
 }
 .va-toggle:hover { color: #aaa; }
 
-
+/* Headline */
 .va-headline {
   padding: 12px 14px; margin: 10px 10px 0;
   border-radius: 10px;
@@ -218,7 +224,7 @@
   font-size: 0.82rem; color: #aaa; font-weight: 500;
 }
 
-
+/* Message */
 .va-message {
   display: flex; gap: 9px; align-items: flex-start;
   padding: 12px 14px 4px;
@@ -227,7 +233,7 @@
 .va-message svg { flex-shrink: 0; margin-top: 2px; color: #555; }
 .va-message p { margin: 0; }
 
-
+/* Sections */
 .va-section { padding: 10px 14px 4px; }
 .va-section-title {
   display: flex; align-items: center; gap: 6px;
@@ -236,7 +242,7 @@
   color: #888;
 }
 
-
+/* Lists */
 .va-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
 
 .va-list-item {
@@ -263,7 +269,7 @@
   color: #ce93d8;
 }
 
-
+/* Helplines */
 .va-helplines {
   display: flex; flex-wrap: wrap; gap: 8px;
   padding: 10px 14px;
@@ -276,7 +282,7 @@
 }
 .va-helplines strong { color: #aaa; }
 
-
+/* Copy button */
 .va-copy-btn {
   display: flex; align-items: center; justify-content: center; gap: 7px;
   width: calc(100% - 28px); margin: 10px 14px 14px;
@@ -289,7 +295,7 @@
 .va-copy-btn:hover { background: rgba(37,211,102,0.2); transform: translateY(-1px); }
 .va-copy-btn.copied { background: rgba(76,175,80,0.2); color: #69f0ae; border-color: rgba(76,175,80,0.4); }
 
-
+/* ── Icon button ── */
 .icon-btn {
   display: flex; align-items: center; gap: 6px;
   background: rgba(76,175,80,0.1); color: #4CAF50;
@@ -300,7 +306,7 @@
 .icon-btn:hover:not(:disabled) { background: rgba(76,175,80,0.2); }
 .icon-btn:disabled { opacity: 0.5; cursor: wait; }
 
-
+/* ── Responsive ── */
 @media (max-width: 1100px) {
   .alerts-layout.has-detail { grid-template-columns: 1fr 360px; }
 }

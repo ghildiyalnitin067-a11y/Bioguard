@@ -1,13 +1,13 @@
+/* ═══ Report Page ═══ */
 
-
-
+/* ── Report container ── */
 .report-container {
   max-width: 780px;
   margin: 0 auto;
   padding: 0 32px 60px;
 }
 
-
+/* ── Stepper ── */
 .stepper {
   display: flex;
   align-items: center;
@@ -53,7 +53,7 @@
 }
 .step-line.done { background: #4CAF50; }
 
-
+/* ── Step content ── */
 .step-content {
   background: #fff; border-radius: 18px;
   padding: 36px 40px; margin-bottom: 20px;
@@ -70,7 +70,7 @@
 .step-hint { font-size: 0.88rem; color: #888; margin-bottom: 28px; }
 .optional { font-size: 0.8rem; color: #aaa; font-weight: 400; }
 
-
+/* ── Incident type grid ── */
 .type-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 16px;
 }
@@ -88,7 +88,7 @@
 .tc-desc  { font-size: 0.78rem; color: #888; line-height: 1.4; }
 .tc-check { position: absolute; top: 12px; right: 12px; color: var(--tc); }
 
-
+/* ── Form styles ── */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-group.full { grid-column: 1 / -1; }
@@ -117,7 +117,7 @@
 }
 .form-textarea:focus { border-color: #4CAF50; background: #fff; }
 
-
+/* Urgency radio */
 .urgency-opts { display: flex; flex-direction: column; gap: 10px; }
 .urgency-opt {
   display: flex; align-items: center; gap: 10px; padding: 12px 16px;
@@ -129,7 +129,7 @@
 .urg-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 .urg-0 { background: #4CAF50; } .urg-1 { background: #fb8c00; } .urg-2 { background: #e53935; }
 
-
+/* Evidence upload */
 .upload-zone {
   border: 2px dashed rgba(76,175,80,0.4); border-radius: 14px;
   padding: 48px 20px; text-align: center; cursor: pointer;
@@ -151,7 +151,7 @@
   font-size: 0.83rem; color: #2d5a27; border: 1px solid rgba(76,175,80,0.2);
 }
 
-
+/* Anonymous toggle */
 .anon-toggle {
   display: flex; align-items: center; gap: 12px;
   cursor: pointer; font-size: 0.9rem; font-weight: 600; color: #444; margin-bottom: 24px;
@@ -169,7 +169,7 @@
 }
 .anon-toggle input:checked + .toggle-track .toggle-thumb { transform: translateX(20px); }
 
-
+/* Summary */
 .summary-box {
   margin-top: 20px; padding: 20px; background: #f8faf8;
   border-radius: 12px; border: 1px solid rgba(76,175,80,0.2);
@@ -180,7 +180,7 @@
 .summary-row span:first-child { color: #888; }
 .summary-row span:last-child { font-weight: 600; color: #1a472a; }
 
-
+/* Navigation */
 .step-nav {
   display: flex; align-items: center; gap: 12px;
 }
@@ -197,7 +197,7 @@
 .nav-btn.submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(76,175,80,0.5); }
 .nav-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
 
-
+/* Success screen */
 .success-screen {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   min-height: 60vh; gap: 20px; text-align: center; padding: 40px 20px;
@@ -225,7 +225,7 @@
   .step-line { display: none; }
 }
 
-
+/* Error + spinner */
 .rp-error {
   font-size: 0.82rem; color: #e53935; font-weight: 600;
   background: rgba(229,57,53,0.08); border: 1px solid rgba(229,57,53,0.25);

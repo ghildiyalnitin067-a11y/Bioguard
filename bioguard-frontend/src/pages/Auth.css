@@ -1,4 +1,7 @@
-
+/* ══════════════════════════════
+   SHARED AUTH PAGE STYLES
+   (SignIn.jsx + SignUp.jsx)
+══════════════════════════════ */
 
 .auth-page {
   display: flex;
@@ -6,7 +9,7 @@
   background: var(--bg-page);
 }
 
-
+/* ── Left panel (forest art) ── */
 .auth-left {
   flex: 0 0 44%;
   background:
@@ -65,13 +68,13 @@
 .auth-quote blockquote { font-style: italic; color: rgba(255,255,255,0.9); font-size: 0.95rem; margin: 0 0 6px; }
 .auth-quote cite { font-size: 0.78rem; color: rgba(255,255,255,0.55); }
 
-
+/* Auth stats row */
 .auth-stats-row { display: flex; gap: 24px; }
 .auth-stat { text-align: center; }
 .as-val { display: block; font-size: 1.6rem; font-weight: 800; color: #a5d6a7; }
 .as-lbl { font-size: 0.72rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
 
-
+/* Feature list (SignUp) */
 .auth-feature-list { display: flex; flex-direction: column; gap: 12px; }
 .af-item {
   display: flex; align-items: center; gap: 8px;
@@ -79,7 +82,7 @@
   font-weight: 500;
 }
 
-
+/* ── Right panel (form) ── */
 .auth-right {
   flex: 1;
   display: flex;
@@ -101,7 +104,7 @@
 }
 .auth-form-header p { font-size: 0.9rem; color: var(--text-muted); }
 
-
+/* Form */
 .auth-form { display: flex; flex-direction: column; gap: 18px; margin-bottom: 20px; }
 
 .auth-field { display: flex; flex-direction: column; gap: 7px; }
@@ -154,7 +157,7 @@
 }
 .pw-toggle:hover { color: #4CAF50; }
 
-
+/* Two-column row for SignUp */
 .auth-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .auth-select {
   width: 100%;
@@ -171,7 +174,7 @@
 }
 .auth-select:focus { border-color: #4CAF50; }
 
-
+/* Submit button */
 .auth-btn {
   display: inline-flex;
   align-items: center;
@@ -196,7 +199,7 @@
 .auth-btn:disabled { opacity: 0.65; cursor: not-allowed; }
 .auth-btn.loading { background: #2d5a27; }
 
-
+/* Loading spinner */
 .spin {
   width: 18px; height: 18px;
   border-radius: 50%;
@@ -207,7 +210,7 @@
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-
+/* Error box */
 .auth-error {
   padding: 12px 16px;
   background: rgba(229,57,53,0.1);
@@ -218,7 +221,7 @@
   font-weight: 500;
 }
 
-
+/* Demo hint */
 .auth-demo-hint {
   text-align: center;
   font-size: 0.78rem;
@@ -230,7 +233,7 @@
 }
 .auth-demo-hint strong { color: #4CAF50; }
 
-
+/* Switch link */
 .auth-switch {
   text-align: center;
   font-size: 0.88rem;
@@ -239,7 +242,7 @@
 .auth-switch a { color: #4CAF50; font-weight: 700; text-decoration: none; }
 .auth-switch a:hover { text-decoration: underline; }
 
-
+/* ── Responsive ── */
 @media (max-width: 860px) {
   .auth-left { display: none; }
   .auth-right { padding: 30px 20px; }
@@ -249,7 +252,7 @@
   .auth-form-card { max-width: 100%; }
 }
 
-
+/* ── Google Sign-In Button ── */
 .google-btn-wrap {
   display: flex;
   justify-content: center;
@@ -259,7 +262,7 @@
   width: 100% !important;
 }
 
-
+/* ── OR Divider ── */
 .auth-divider {
   display: flex;
   align-items: center;
