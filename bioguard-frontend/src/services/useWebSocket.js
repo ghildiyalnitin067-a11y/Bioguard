@@ -2,15 +2,11 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:4000';
 
-/**
- * useWebSocket — connects to backend WS and streams real-time events.
- * Returns: { lastEvent, events, status, reconnect }
- */
 export const useWebSocket = () => {
-  const [status,    setStatus]    = useState('disconnected');
+  const [status, setStatus] = useState('disconnected');
   const [lastEvent, setLastEvent] = useState(null);
-  const [events,    setEvents]    = useState([]);
-  const wsRef    = useRef(null);
+  const [events, setEvents] = useState([]);
+  const wsRef = useRef(null);
   const timerRef = useRef(null);
 
   const connect = useCallback(() => {
@@ -25,17 +21,16 @@ export const useWebSocket = () => {
       clearTimeout(timerRef.current);
     };
 
-    ws.onmessage = evt => {
+    ws.onmessage = (evt) => {
       try {
         const payload = JSON.parse(evt.data);
         setLastEvent(payload);
-        setEvents(prev => [payload, ...prev].slice(0, 50)); // keep last 50
+        setEvents((prev) => [payload, ...prev].slice(0, 50));
       } catch {}
     };
 
     ws.onclose = () => {
       setStatus('reconnecting');
-      // Auto-reconnect after 5s
       timerRef.current = setTimeout(connect, 5000);
     };
 

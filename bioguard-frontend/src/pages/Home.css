@@ -1,8 +1,6 @@
-/* ═══════════════════════════════════════════════
-   HOME PAGE — BioGuard Conservation Platform
-   ═══════════════════════════════════════════════ */
 
-/* ── Fade-in on mount ── */
+
+
 .home-container {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   color: var(--text-dark);
@@ -12,9 +10,7 @@
 }
 .home-container.fade-in { opacity: 1; }
 
-/* ══════════════════════════════════════════
-   LIVE ALERT TICKER
-══════════════════════════════════════════ */
+
 .alert-ticker {
   position: fixed;
   top: 0;
@@ -82,12 +78,10 @@
 .ticker-info .ticker-badge    { background: #1565c0; color: #fff; }
 .ticker-sep { color: rgba(255,255,255,0.2); }
 
-/* Push everything below the ticker */
+
 .navbar { top: 36px !important; }
 
-/* ══════════════════════════════════════════
-   HERO SECTION
-══════════════════════════════════════════ */
+
 .hero-section {
   position: relative;
   height: 100vh;
@@ -117,7 +111,7 @@
   z-index: 1;
 }
 
-/* Floating particles */
+
 .hero-particles { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 .particle {
   position: absolute;
@@ -189,7 +183,7 @@
   justify-content: center;
 }
 
-/* ── Buttons ── */
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -236,7 +230,7 @@
 }
 .inline-btn { margin-top: 8px; }
 
-/* Trust tags */
+
 .hero-trust {
   display: flex;
   flex-wrap: wrap;
@@ -252,7 +246,7 @@
   color: rgba(255,255,255,0.65);
 }
 
-/* Scroll arrow */
+
 .scroll-indicator {
   position: absolute;
   bottom: 32px;
@@ -271,9 +265,7 @@
   50% { transform: translateX(-50%) translateY(-12px); }
 }
 
-/* ══════════════════════════════════════════
-   STATS BAR
-══════════════════════════════════════════ */
+
 .stats-section {
   background: #fff;
   padding: 0 20px;
@@ -323,9 +315,7 @@
   line-height: 1.4;
 }
 
-/* ══════════════════════════════════════════
-   SHARED SECTION STYLES
-══════════════════════════════════════════ */
+
 .section-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -363,9 +353,7 @@
   line-height: 1.65;
 }
 
-/* ══════════════════════════════════════════
-   FEATURES SECTION
-══════════════════════════════════════════ */
+
 .features-section {
   padding: 100px 20px;
   background: #f7faf8;
@@ -444,9 +432,7 @@
 }
 .feature-link:hover { gap: 10px; color: #2d5a27; }
 
-/* ══════════════════════════════════════════
-   HOW IT WORKS / MAP PREVIEW
-══════════════════════════════════════════ */
+
 .how-section {
   padding: 100px 20px;
   background: #fff;
@@ -499,7 +485,7 @@
   line-height: 1.6;
 }
 
-/* ── Fake Map ── */
+
 .map-preview-wrap { perspective: 1200px; }
 .map-preview-card {
   border-radius: 18px;
@@ -559,7 +545,7 @@
   background: #1e2d1e;
 }
 
-/* Fake map simulation */
+
 .fake-map {
   position: relative;
   width: 100%;
@@ -643,9 +629,7 @@
   flex-shrink: 0;
 }
 
-/* ══════════════════════════════════════════
-   IMPACT SECTION
-══════════════════════════════════════════ */
+
 .impact-section {
   padding: 100px 20px;
   background: linear-gradient(135deg, #1a472a 0%, #2d5a27 50%, #1b5e20 100%);
@@ -702,9 +686,7 @@
   line-height: 1.5;
 }
 
-/* ══════════════════════════════════════════
-   CTA SECTION
-══════════════════════════════════════════ */
+
 .cta-section {
   position: relative;
   padding: 100px 20px;
@@ -751,9 +733,7 @@
 .s2 { width: 400px; height: 400px; bottom: -150px; right: -100px; }
 .s3 { width: 300px; height: 300px; top: 50%; left: 50%; transform: translate(-50%,-50%); }
 
-/* ═══════════════════════════════════════════════
-   TESTIMONIALS SECTION
-   ═══════════════════════════════════════════════ */
+
 .testimonials-section {
   padding: 100px 20px;
   background: #fff;
@@ -813,7 +793,7 @@
   margin-top: 4px;
 }
 
-/* Modal styles for reviews */
+
 .review-modal-overlay {
   position: fixed;
   inset: 0;
@@ -873,9 +853,7 @@
   box-shadow: 0 0 0 3px rgba(76,175,80,0.15);
 }
 
-/* ══════════════════════════════════════════
-   RESPONSIVE
-══════════════════════════════════════════ */
+
 @media (max-width: 1024px) {
   .stats-grid   { grid-template-columns: repeat(2,1fr); }
   .impact-grid  { grid-template-columns: repeat(2,1fr); }

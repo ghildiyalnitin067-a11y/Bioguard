@@ -1,20 +1,6 @@
-/**
- * BioGuard Email Notification Service
- * ─────────────────────────────────────────────────────────────
- * Sends richly-formatted email alerts to admins + asha_workers
- * whenever a new alert or community report is created.
- *
- * Setup: Add to your .env (backend/.env or root .env):
- *   GMAIL_USER=your_gmail@gmail.com
- *   GMAIL_APP_PASS=your_16_char_app_password
- *
- * Gmail App Password guide:
- *   Google Account → Security → 2-Step Verification → App passwords
- */
 
 const nodemailer = require('nodemailer');
 
-/* ── Transporter (lazy-created so missing config doesn't crash boot) ── */
 let _transporter = null;
 
 function getTransporter() {
@@ -27,30 +13,27 @@ function getTransporter() {
     service: 'gmail',
     auth: {
       user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASS,
-    },
+      pass: process.env.GMAIL_APP_PASS
+    }
   });
   return _transporter;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   HTML EMAIL TEMPLATE — ALERT NOTIFICATION
-───────────────────────────────────────────────────────────── */
 function alertEmailHTML(alert) {
-  const sev      = alert.severity || 'info';
+  const sev = alert.severity || 'info';
   const sevColor = sev === 'critical' ? '#ff1744' : sev === 'warning' ? '#ff9100' : '#29b6f6';
   const headline = alert.headline || `${alert.type} Alert`;
-  const hindi    = alert.headlineHindi || '';
-  const msg      = alert.villageMessage || alert.description || '';
-  const solns    = alert.solutions  || [];
-  const prev     = alert.prevention || [];
+  const hindi = alert.headlineHindi || '';
+  const msg = alert.villageMessage || alert.description || '';
+  const solns = alert.solutions || [];
+  const prev = alert.prevention || [];
 
   const solutiontRows = solns.map((s, i) => `
     <tr>
       <td style="padding:6px 0; color:#a5d6a7; font-size:14px; vertical-align:top;">
         <span style="display:inline-block;width:22px;height:22px;background:#4CAF5022;
           border:1px solid #4CAF5055;border-radius:50%;text-align:center;
-          line-height:22px;font-weight:900;color:#4CAF50;margin-right:8px;">${i+1}</span>
+          line-height:22px;font-weight:900;color:#4CAF50;margin-right:8px;">${i + 1}</span>
         ${s}
       </td>
     </tr>`).join('');
@@ -92,7 +75,7 @@ function alertEmailHTML(alert) {
     <!-- Location + Time -->
     <div style="padding:18px 32px 0;display:flex;gap:20px;flex-wrap:wrap;">
       <span style="font-size:13px;color:#888;">📍 <strong style="color:#ccc;">${alert.location || 'Unknown location'}</strong></span>
-      <span style="font-size:13px;color:#888;">🕐 ${new Date(alert.createdAt || Date.now()).toLocaleString('en-IN', { timeZone:'Asia/Kolkata', dateStyle:'medium', timeStyle:'short' })}</span>
+      <span style="font-size:13px;color:#888;">🕐 ${new Date(alert.createdAt || Date.now()).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })}</span>
       <span style="font-size:13px;color:#888;">🏷️ ${alert.type || 'Unknown'}</span>
     </div>
 
@@ -148,14 +131,11 @@ function alertEmailHTML(alert) {
 </html>`;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   HTML EMAIL TEMPLATE — REPORT NOTIFICATION
-───────────────────────────────────────────────────────────── */
 function reportEmailHTML(report) {
-  const urgColor = report.urgency?.includes('High') ? '#ff1744'
-    : report.urgency?.includes('Medium') ? '#ff9100' : '#29b6f6';
+  const urgColor = report.urgency?.includes('High') ? '#ff1744' :
+  report.urgency?.includes('Medium') ? '#ff9100' : '#29b6f6';
   const typeEmoji = {
-    wildlife:'🐘', deforestation:'🌳', fire:'🔥', poaching:'🎯', other:'📋'
+    wildlife: '🐘', deforestation: '🌳', fire: '🔥', poaching: '🎯', other: '📋'
   }[report.type] || '📋';
 
   return `
@@ -188,9 +168,9 @@ function reportEmailHTML(report) {
         <tr><td style="padding:6px 0;color:#666;">Urgency</td>
           <td style="color:${urgColor};font-weight:700;">${report.urgency}</td></tr>
         <tr><td style="padding:6px 0;color:#666;">Reporter</td>
-          <td>${report.anonymous ? '👤 Anonymous' : (report.contactName || 'Unknown')}</td></tr>
-        ${!report.anonymous && report.contactPhone
-          ? `<tr><td style="padding:6px 0;color:#666;">Phone</td><td>${report.contactPhone}</td></tr>` : ''}
+          <td>${report.anonymous ? '👤 Anonymous' : report.contactName || 'Unknown'}</td></tr>
+        ${!report.anonymous && report.contactPhone ?
+  `<tr><td style="padding:6px 0;color:#666;">Phone</td><td>${report.contactPhone}</td></tr>` : ''}
       </table>
 
       <div style="margin-top:16px;background:rgba(255,255,255,0.03);border-radius:10px;
@@ -217,15 +197,7 @@ function reportEmailHTML(report) {
 </html>`;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   PUBLIC API
-───────────────────────────────────────────────────────────── */
 
-/**
- * Send alert notification email to a list of recipients.
- * @param {string[]} toEmails - array of email addresses
- * @param {object}   alert    - full alert DB document
- */
 async function sendAlertNotification(toEmails, alert) {
   const t = getTransporter();
   if (!t || !toEmails?.length) return;
@@ -235,10 +207,10 @@ async function sendAlertNotification(toEmails, alert) {
 
   try {
     await t.sendMail({
-      from:    `"BioGuard NE India 🌿" <${process.env.GMAIL_USER}>`,
-      to:      toEmails.join(', '),
+      from: `"BioGuard NE India 🌿" <${process.env.GMAIL_USER}>`,
+      to: toEmails.join(', '),
       subject,
-      html:    alertEmailHTML(alert),
+      html: alertEmailHTML(alert)
     });
     console.log(`[Email] Alert notification sent to ${toEmails.length} recipient(s).`);
   } catch (err) {
@@ -246,25 +218,20 @@ async function sendAlertNotification(toEmails, alert) {
   }
 }
 
-/**
- * Send report notification email to a list of recipients.
- * @param {string[]} toEmails - array of email addresses
- * @param {object}   report   - full report DB document
- */
 async function sendReportNotification(toEmails, report) {
   const t = getTransporter();
   if (!t || !toEmails?.length) return;
 
-  const typeLabel = { wildlife:'Wildlife Conflict', deforestation:'Illegal Logging',
-    fire:'Forest Fire', poaching:'Poaching', other:'Other' }[report.type] || report.type;
+  const typeLabel = { wildlife: 'Wildlife Conflict', deforestation: 'Illegal Logging',
+    fire: 'Forest Fire', poaching: 'Poaching', other: 'Other' }[report.type] || report.type;
   const subject = `[BioGuard 📋 NEW REPORT] ${typeLabel} — ${report.location} (#${report.refId})`;
 
   try {
     await t.sendMail({
-      from:    `"BioGuard NE India 🌿" <${process.env.GMAIL_USER}>`,
-      to:      toEmails.join(', '),
+      from: `"BioGuard NE India 🌿" <${process.env.GMAIL_USER}>`,
+      to: toEmails.join(', '),
       subject,
-      html:    reportEmailHTML(report),
+      html: reportEmailHTML(report)
     });
     console.log(`[Email] Report notification sent to ${toEmails.length} recipient(s).`);
   } catch (err) {

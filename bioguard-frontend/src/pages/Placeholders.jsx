@@ -1,15 +1,15 @@
-import React from 'react';
+import React from 'react';import { jsxDEV as _jsxDEV } from "react/jsx-dev-runtime";
 
-const PlaceholderPage = ({ title }) => (
-  <div style={{ paddingTop: '100px', textAlign: 'center', minHeight: '100vh', padding: '120px 20px', backgroundColor: '#fdfbf7' }}>
-    <h1 style={{ color: '#1a472a', marginBottom: '20px', fontFamily: 'Inter, sans-serif' }}>{title}</h1>
-    <p style={{ fontFamily: 'Inter, sans-serif', color: '#555' }}>This page is currently under construction.</p>
-  </div>
+const PlaceholderPage = ({ title }) =>
+_jsxDEV("div", { style: { paddingTop: '100px', textAlign: 'center', minHeight: '100vh', padding: '120px 20px', backgroundColor: '#fdfbf7' }, children: [
+  _jsxDEV("h1", { style: { color: '#1a472a', marginBottom: '20px', fontFamily: 'Inter, sans-serif' }, children: title }, void 0, false),
+  _jsxDEV("p", { style: { fontFamily: 'Inter, sans-serif', color: '#555' }, children: "This page is currently under construction." }, void 0, false)] }, void 0, true
 );
 
-export const Dashboard = () => <PlaceholderPage title="Dashboard" />;
-export const Alerts = () => <PlaceholderPage title="Alerts" />;
-export const ConflictMonitor = () => <PlaceholderPage title="Human-Wildlife Conflict Monitor" />;
-export const Analytics = () => <PlaceholderPage title="Analytics" />;
-export const Report = () => <PlaceholderPage title="Community Reporting" />;
-export const Learn = () => <PlaceholderPage title="Learn & Awareness" />;
+
+export const Dashboard = () => _jsxDEV(PlaceholderPage, { title: "Dashboard" }, void 0, false);
+export const Alerts = () => _jsxDEV(PlaceholderPage, { title: "Alerts" }, void 0, false);
+export const ConflictMonitor = () => _jsxDEV(PlaceholderPage, { title: "Human-Wildlife Conflict Monitor" }, void 0, false);
+export const Analytics = () => _jsxDEV(PlaceholderPage, { title: "Analytics" }, void 0, false);
+export const Report = () => _jsxDEV(PlaceholderPage, { title: "Community Reporting" }, void 0, false);
+export const Learn = () => _jsxDEV(PlaceholderPage, { title: "Learn & Awareness" }, void 0, false);

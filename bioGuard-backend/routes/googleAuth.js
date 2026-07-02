@@ -1,24 +1,14 @@
 const express = require('express');
 const { OAuth2Client } = require('google-auth-library');
-const jwt     = require('jsonwebtoken');
-const User    = require('../models/User');
-const router  = express.Router();
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const router = express.Router();
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-const signToken = id =>
-  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+const signToken = (id) =>
+jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
 
-/**
- * POST /api/auth/google
- * Body: { credential } — the Google ID token from @react-oauth/google
- *
- * Flow:
- *   1. Verify the ID token with Google
- *   2. Extract email, name, picture
- *   3. Find or create user in MongoDB (role defaults to 'user')
- *   4. Return JWT + user object (same shape as normal signin)
- */
 router.post('/google', async (req, res) => {
   try {
     const { credential } = req.body;
@@ -28,29 +18,25 @@ router.post('/google', async (req, res) => {
       return res.status(503).json({ error: 'Google OAuth not configured. Set GOOGLE_CLIENT_ID in .env' });
     }
 
-    // Verify token with Google
-    const ticket  = await client.verifyIdToken({
-      idToken:  credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID
     });
     const payload = ticket.getPayload();
     const { email, name, picture, sub: googleId } = payload;
 
-    // Find or create user
     let user = await User.findOne({ email });
 
     if (!user) {
-      // New Google user — create with random unguessable password
       user = await User.create({
         name,
         email,
-        password:   require('crypto').randomBytes(32).toString('hex'), // never used
-        role:       'user',   // default role for Google sign-ins
-        avatar:     picture || '',
-        joinedVia:  'google',
+        password: require('crypto').randomBytes(32).toString('hex'),
+        role: 'user',
+        avatar: picture || '',
+        joinedVia: 'google'
       });
     } else {
-      // Update avatar from Google if not set
       if (!user.avatar && picture) {
         user.avatar = picture;
         await user.save({ validateBeforeSave: false });
@@ -67,18 +53,18 @@ router.post('/google', async (req, res) => {
     res.json({
       token: signToken(user._id),
       user: {
-        id:         user._id,
-        name:       user.name,
-        email:      user.email,
-        role:       user.role,
-        state:      user.state,
-        bio:        user.bio,
-        avatar:     user.avatar,
-        reports:    user.reports,
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        state: user.state,
+        bio: user.bio,
+        avatar: user.avatar,
+        reports: user.reports,
         alertsRecv: user.alertsRecv,
-        joined:     user.joined,
+        joined: user.joined
       },
-      message: `Welcome, ${name}!`,
+      message: `Welcome, ${name}!`
     });
   } catch (err) {
     console.error('[Google Auth]', err.message);

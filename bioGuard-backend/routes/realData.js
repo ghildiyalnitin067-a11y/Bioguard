@@ -1,80 +1,53 @@
-/**
- * Real Data Routes — BioGuard v3
- * ─────────────────────────────────────────────────────────────
- * GET  /api/real-data/wildlife-data        — GBIF wildlife occurrences
- * GET  /api/real-data/forest-alerts        — GFW deforestation alerts
- * GET  /api/real-data/species-stats        — GBIF diversity stats
- * POST /api/real-data/predict-risk         — Live ML risk prediction (JS Random Forest)
- * GET  /api/real-data/predict-risk/zones   — Pre-computed zone predictions
- *
- * ML Approach: Pure JavaScript Random Forest ensemble
- *   Inputs:  lat, lng, dist_to_forest, gbif_sightings_count,
- *            season_multiplier, hour_of_day, threatened_species_count
- *   Output:  risk_score [0-1], risk_level, AI insight, data sources
- */
 
 const express = require('express');
-const router  = express.Router();
+const router = express.Router();
 const {
   fetchGBIFOccurrences,
   fetchThreatenedSpeciesNearby,
   countOccurrencesNear,
   fetchForestAlerts,
-  fetchSpeciesStats,
+  fetchSpeciesStats
 } = require('../services/realDataService');
 const {
-  predictRisk, getAllPredictions, getLastRefreshed, ZONES,
+  predictRisk, getAllPredictions, getLastRefreshed, ZONES
 } = require('../services/mlPredictor');
 const {
-  predictWithPython, buildFeatures, isPythonMLAvailable,
+  predictWithPython, buildFeatures, isPythonMLAvailable
 } = require('../ml/mlBridge');
 
-/* ════════════════════════════════════════════════
-   GET /api/real-data/wildlife-data
-   Live GBIF wildlife occurrences for NE India
-   Query: ?lat=&lng=&radius=&limit=
-════════════════════════════════════════════════ */
 router.get('/wildlife-data', async (req, res) => {
   try {
     const { lat, lng, radius = 200, limit = 100 } = req.query;
-    const opts = lat && lng
-      ? { lat: parseFloat(lat), lng: parseFloat(lng), radiusKm: parseInt(radius), limit: parseInt(limit) }
-      : { limit: parseInt(limit) };
+    const opts = lat && lng ?
+    { lat: parseFloat(lat), lng: parseFloat(lng), radiusKm: parseInt(radius), limit: parseInt(limit) } :
+    { limit: parseInt(limit) };
 
     const occurrences = await fetchGBIFOccurrences(opts);
     res.json({
-      source:  'GBIF — Global Biodiversity Information Facility (api.gbif.org)',
+      source: 'GBIF — Global Biodiversity Information Facility (api.gbif.org)',
       fetched: new Date().toISOString(),
-      count:   occurrences.length,
-      occurrences,
+      count: occurrences.length,
+      occurrences
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-/* ════════════════════════════════════════════════
-   GET /api/real-data/forest-alerts
-   GFW / GLAD deforestation alerts
-════════════════════════════════════════════════ */
 router.get('/forest-alerts', async (req, res) => {
   try {
     const alerts = await fetchForestAlerts();
     res.json({
-      source:  'Global Forest Watch GLAD Alerts (data-api.globalforestwatch.org)',
+      source: 'Global Forest Watch GLAD Alerts (data-api.globalforestwatch.org)',
       fetched: new Date().toISOString(),
-      count:   alerts.length,
-      alerts,
+      count: alerts.length,
+      alerts
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-/* ════════════════════════════════════════════════
-   GET /api/real-data/species-stats
-   Species diversity statistics from GBIF
-════════════════════════════════════════════════ */
 router.get('/species-stats', async (req, res) => {
   try {
     const stats = await fetchSpeciesStats();
@@ -84,120 +57,100 @@ router.get('/species-stats', async (req, res) => {
   }
 });
 
-/* ════════════════════════════════════════════════
-   GET /api/real-data/predict-risk/zones
-   All pre-computed zone predictions (from mlPredictor cache)
-════════════════════════════════════════════════ */
 router.get('/predict-risk/zones', (req, res) => {
-  const predictions  = getAllPredictions();
+  const predictions = getAllPredictions();
   const lastRefreshed = getLastRefreshed();
   res.json({ predictions, count: predictions.length, lastRefreshed });
 });
 
-/* ════════════════════════════════════════════════
-   POST /api/real-data/predict-risk
-   Live ML prediction for any clicked map coordinate
-   Body: { lat, lng }
-   Returns: risk_score, risk_level, insight, real GBIF data
-════════════════════════════════════════════════ */
 router.post('/predict-risk', async (req, res) => {
   try {
     const { lat, lng } = req.body;
     if (lat == null || lng == null)
-      return res.status(400).json({ error: 'lat and lng are required.' });
+    return res.status(400).json({ error: 'lat and lng are required.' });
 
     const latF = parseFloat(lat);
     const lngF = parseFloat(lng);
 
-    // ── 1. Find nearest monitored zone ──────────────────────────
     const nearest = findNearestZone(latF, lngF);
 
-    // ── 2. Fetch live GBIF + GFW data in parallel ───────────────
     const [occurrences, threatened, forestAlerts, occCount] = await Promise.allSettled([
-      fetchGBIFOccurrences({ lat: latF, lng: lngF, radiusKm: 100, limit: 20 }),
-      fetchThreatenedSpeciesNearby(latF, lngF, 100),
-      fetchForestAlerts(),
-      countOccurrencesNear(latF, lngF, 50),
-    ]).then(results => results.map(r => r.status === 'fulfilled' ? r.value : (Array.isArray(r.value) ? [] : 0)));
+    fetchGBIFOccurrences({ lat: latF, lng: lngF, radiusKm: 100, limit: 20 }),
+    fetchThreatenedSpeciesNearby(latF, lngF, 100),
+    fetchForestAlerts(),
+    countOccurrencesNear(latF, lngF, 50)]
+    ).then((results) => results.map((r) => r.status === 'fulfilled' ? r.value : Array.isArray(r.value) ? [] : 0));
 
     const safeOccurrences = Array.isArray(occurrences) ? occurrences : [];
-    const safeThreatened  = Array.isArray(threatened)  ? threatened  : [];
-    const safeForest      = Array.isArray(forestAlerts) ? forestAlerts : [];
-    const safeOccCount    = typeof occCount === 'number' ? occCount : 0;
+    const safeThreatened = Array.isArray(threatened) ? threatened : [];
+    const safeForest = Array.isArray(forestAlerts) ? forestAlerts : [];
+    const safeOccCount = typeof occCount === 'number' ? occCount : 0;
 
-    // ── 3. Nearby forest alerts (within 200km) ──────────────────
-    const nearbyForest = safeForest.filter(a =>
-      haversineKm(latF, lngF, a.lat, a.lng) < 200
+    const nearbyForest = safeForest.filter((a) =>
+    haversineKm(latF, lngF, a.lat, a.lng) < 200
     );
 
-    // ── 4. PRIMARY: Python sklearn RF — FALLBACK: JS predictor ─────
-    //    Python receives geo features + GBIF/GFW enrichment.
-    //    mlBridge auto-falls back to JS if Python is offline.
-    const features    = buildFeatures(latF, lngF);
-    const pyFeatures  = {
-      sightings:      safeOccCount,
-      hist_conflicts: nearbyForest.filter(a => ['high','critical'].includes(a.severity)).length * 3,
+    const features = buildFeatures(latF, lngF);
+    const pyFeatures = {
+      sightings: safeOccCount,
+      hist_conflicts: nearbyForest.filter((a) => ['high', 'critical'].includes(a.severity)).length * 3
     };
     const pyResult = await predictWithPython(latF, lngF, pyFeatures);
 
     const enrichedScore = pyResult.risk_score;
-    const riskLevel     = pyResult.risk_level?.toLowerCase() || getRiskLevel(enrichedScore);
-    const modelUsed     = pyResult.source === 'python_ml'
-      ? 'Python RandomForestRegressor (sklearn) + GBIF/GFW enrichment'
-      : 'JS Random Forest (fallback) + GBIF/GFW enrichment';
+    const riskLevel = pyResult.risk_level?.toLowerCase() || getRiskLevel(enrichedScore);
+    const modelUsed = pyResult.source === 'python_ml' ?
+    'Python RandomForestRegressor (sklearn) + GBIF/GFW enrichment' :
+    'JS Random Forest (fallback) + GBIF/GFW enrichment';
 
-    // ── 4b. Compute GBIF/GFW enrichment boosts (still applied on top of Python score) ─
-    const gbifBoost      = Math.min(0.10, safeOccCount / 1500);
+    const gbifBoost = Math.min(0.10, safeOccCount / 1500);
     const threatenedBoost = Math.min(0.07, safeThreatened.length * 0.02);
-    const forestBoost    = Math.min(0.08,
-      nearbyForest.filter(a => ['high','critical'].includes(a.severity)).length * 0.03
+    const forestBoost = Math.min(0.08,
+    nearbyForest.filter((a) => ['high', 'critical'].includes(a.severity)).length * 0.03
     );
-    // Note: enrichedScore already set from pyResult.risk_score above
     const basePred = { ...pyResult, threat_type: pyResult.threat_type || 'Wildlife', factors: pyResult.features_used };
 
-    // ── 5. AI insight ─────────────────────────────────────────────
     const insight = generateInsight({
       riskLevel, enrichedScore, nearest: nearest.zone,
       occCount: safeOccCount, threatened: safeThreatened.length,
-      nearbyForest, basePred,
+      nearbyForest, basePred
     });
 
-    // ── 6. Respond ───────────────────────────────────────────────
     res.json({
       lat: latF, lng: lngF,
-      nearest_zone:  nearest.zone.name,
-      distance_km:   parseFloat(nearest.distKm.toFixed(1)),
-      risk_score:    parseFloat(enrichedScore.toFixed(3)),
-      risk_level:    riskLevel,
-      threat_type:   basePred.threat_type,
-      confidence:    pyResult.confidence,
+      nearest_zone: nearest.zone.name,
+      distance_km: parseFloat(nearest.distKm.toFixed(1)),
+      risk_score: parseFloat(enrichedScore.toFixed(3)),
+      risk_level: riskLevel,
+      threat_type: basePred.threat_type,
+      confidence: pyResult.confidence,
       insight,
-      ml_model:      modelUsed,
-      ml_source:     pyResult.source || 'js_fallback',
+      ml_model: modelUsed,
+      ml_source: pyResult.source || 'js_fallback',
       data_sources: {
-        gbif_sightings_50km:       safeOccCount,
-        gbif_sample_returned:      safeOccurrences.length,
+        gbif_sightings_50km: safeOccCount,
+        gbif_sample_returned: safeOccurrences.length,
         threatened_species_nearby: safeThreatened.length,
-        forest_alerts_200km:       nearbyForest.length,
-        gbif_boost:                parseFloat(gbifBoost.toFixed(3)),
-        threatened_boost:          parseFloat(threatenedBoost.toFixed(3)),
-        forest_boost:              parseFloat(forestBoost.toFixed(3)),
+        forest_alerts_200km: nearbyForest.length,
+        gbif_boost: parseFloat(gbifBoost.toFixed(3)),
+        threatened_boost: parseFloat(threatenedBoost.toFixed(3)),
+        forest_boost: parseFloat(forestBoost.toFixed(3))
       },
-      top_species: safeOccurrences.slice(0, 5).map(o => ({
-        species:    o.species,
+      top_species: safeOccurrences.slice(0, 5).map((o) => ({
+        species: o.species,
         commonName: o.commonName || '',
         iucnStatus: o.iucnStatus || null,
-        lat: o.lat, lng: o.lng,
+        lat: o.lat, lng: o.lng
       })),
-      threatened_nearby:    safeThreatened.slice(0, 3),
+      threatened_nearby: safeThreatened.slice(0, 3),
       forest_alerts_nearby: nearbyForest.slice(0, 3),
       factors: {
         ...(pyResult.features_used || {}),
-        gbif_sighting_boost:      parseFloat(gbifBoost.toFixed(3)),
+        gbif_sighting_boost: parseFloat(gbifBoost.toFixed(3)),
         threatened_species_boost: parseFloat(threatenedBoost.toFixed(3)),
-        forest_alert_boost:       parseFloat(forestBoost.toFixed(3)),
+        forest_alert_boost: parseFloat(forestBoost.toFixed(3))
       },
-      generated_at: new Date().toISOString(),
+      generated_at: new Date().toISOString()
     });
   } catch (err) {
     console.error('[PredictRisk] Error:', err.message);
@@ -205,25 +158,22 @@ router.post('/predict-risk', async (req, res) => {
   }
 });
 
-/* ── Helper: Haversine distance in km ── */
 function haversineKm(lat1, lng1, lat2, lng2) {
-  const R = 6371, r = d => d * Math.PI / 180;
-  const dLat = r(lat2 - lat1), dLng = r(lng2 - lng1);
-  const a = Math.sin(dLat/2)**2 + Math.cos(r(lat1)) * Math.cos(r(lat2)) * Math.sin(dLng/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const R = 6371,r = (d) => d * Math.PI / 180;
+  const dLat = r(lat2 - lat1),dLng = r(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(r(lat1)) * Math.cos(r(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-/* ── Helper: Nearest monitored zone ── */
 function findNearestZone(lat, lng) {
-  let best = ZONES[0], bestDist = Infinity;
+  let best = ZONES[0],bestDist = Infinity;
   for (const z of ZONES) {
     const d = haversineKm(lat, lng, z.lat, z.lng);
-    if (d < bestDist) { bestDist = d; best = z; }
+    if (d < bestDist) {bestDist = d;best = z;}
   }
   return { zone: best, distKm: bestDist };
 }
 
-/* ── Helper: Risk level from score ── */
 function getRiskLevel(score) {
   if (score >= 0.80) return 'critical';
   if (score >= 0.60) return 'high';
@@ -231,7 +181,6 @@ function getRiskLevel(score) {
   return 'low';
 }
 
-/* ── Helper: Generate human-readable AI insight ── */
 function generateInsight({ riskLevel, enrichedScore, nearest, occCount, threatened, nearbyForest, basePred }) {
   const pct = Math.round(enrichedScore * 100);
   const threat = basePred.threat_type;
@@ -239,9 +188,9 @@ function generateInsight({ riskLevel, enrichedScore, nearest, occCount, threaten
 
   const RISK_LABELS = {
     critical: `🔴 CRITICAL RISK (${pct}/100) — Immediate action required near ${nearest.name}.`,
-    high:     `🟠 HIGH RISK (${pct}/100) — Elevated ${threat} threat near ${nearest.name}.`,
-    medium:   `🟡 MEDIUM RISK (${pct}/100) — Monitor ${threat} activity near ${nearest.name}.`,
-    low:      `🟢 LOW RISK (${pct}/100) — ${nearest.name} appears stable.`,
+    high: `🟠 HIGH RISK (${pct}/100) — Elevated ${threat} threat near ${nearest.name}.`,
+    medium: `🟡 MEDIUM RISK (${pct}/100) — Monitor ${threat} activity near ${nearest.name}.`,
+    low: `🟢 LOW RISK (${pct}/100) — ${nearest.name} appears stable.`
   };
 
   lines.push(RISK_LABELS[riskLevel] || RISK_LABELS.medium);
@@ -249,15 +198,15 @@ function generateInsight({ riskLevel, enrichedScore, nearest, occCount, threaten
   if (basePred.prediction) lines.push(basePred.prediction);
 
   if (occCount > 500)
-    lines.push(`🐾 High wildlife activity: ${occCount.toLocaleString()} GBIF sightings within 50km.`);
-  else if (occCount > 0)
-    lines.push(`🐾 ${occCount} GBIF wildlife sightings recorded within 50km.`);
+  lines.push(`🐾 High wildlife activity: ${occCount.toLocaleString()} GBIF sightings within 50km.`);else
+  if (occCount > 0)
+  lines.push(`🐾 ${occCount} GBIF wildlife sightings recorded within 50km.`);
 
   if (threatened > 0)
-    lines.push(`⚠️ ${threatened} threatened/endangered species recorded nearby (GBIF/IUCN).`);
+  lines.push(`⚠️ ${threatened} threatened/endangered species recorded nearby (GBIF/IUCN).`);
 
   if (nearbyForest.length > 0) {
-    const critical = nearbyForest.filter(a => a.severity === 'critical').length;
+    const critical = nearbyForest.filter((a) => a.severity === 'critical').length;
     lines.push(`🌳 ${nearbyForest.length} GFW deforestation alert(s) within 200km${critical ? ` (${critical} critical)` : ''}.`);
   }
 

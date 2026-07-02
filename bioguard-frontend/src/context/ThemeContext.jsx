@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';import { jsxDEV as _jsxDEV } from "react/jsx-dev-runtime";
 
 const ThemeContext = createContext();
 
@@ -12,13 +12,13 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem('bioguard-theme', theme);
   }, [theme]);
 
-  const toggle = () => setTheme(t => (t === 'light' ? 'dark' : 'light'));
+  const toggle = () => setTheme((t) => t === 'light' ? 'dark' : 'light');
 
   return (
-    <ThemeContext.Provider value={{ theme, toggle }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+    _jsxDEV(ThemeContext.Provider, { value: { theme, toggle }, children:
+      children }, void 0, false
+    ));
+
 };
 
 export const useTheme = () => {

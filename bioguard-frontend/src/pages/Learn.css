@@ -1,8 +1,8 @@
-/* ═══ Learn Page ═══ */
+
 
 .learn-page { background: #f4f7f4; padding-top: 100px; }
 
-/* ── Learn hero ── */
+
 .learn-hero {
   background: linear-gradient(135deg, #1a472a 0%, #2d5a27 60%, #33691e 100%);
   padding: 60px 32px;
@@ -21,7 +21,7 @@
 .learn-hero h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; color: #fff; margin-bottom: 16px; letter-spacing: -0.02em; }
 .learn-hero p  { font-size: 1.05rem; color: rgba(255,255,255,0.8); line-height: 1.65; }
 
-/* ── Category nav ── */
+
 .cat-nav {
   display: flex; gap: 8px; padding: 24px 32px 0; flex-wrap: wrap;
   position: sticky; top: 100px; z-index: 10;
@@ -35,10 +35,10 @@
 .cat-tab.active { background: #1a472a; color: #fff; border-color: #1a472a; }
 .cat-tab:hover:not(.active) { border-color: #4CAF50; color: #2d5a27; }
 
-/* ── Body ── */
+
 .learn-body { max-width: 1200px; margin: 0 auto; padding: 0 32px 60px; }
 
-/* ── Featured articles ── */
+
 .featured-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px,1fr)); gap: 24px; margin-bottom: 32px; }
 .featured-card {
   background: #fff; border-radius: 20px; overflow: hidden;
@@ -73,13 +73,13 @@
 }
 .fc-btn:hover { background: #2d5a27; transform: translateX(4px); }
 
-/* ── Section label ── */
+
 .section-label {
   font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
   color: #aaa; margin: 0 0 16px;
 }
 
-/* ── Article grid ── */
+
 .article-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 18px; margin-bottom: 40px; }
 .article-card {
   background: #fff; border-radius: 16px; overflow: hidden;
@@ -108,7 +108,7 @@
 .ac-more { font-size: 0.78rem; font-weight: 700; color: #4CAF50; display: inline-flex; align-items: center; gap: 2px; transition: gap 0.2s; }
 .article-card:hover .ac-more { gap: 5px; }
 
-/* ── Species section ── */
+
 .species-section { margin-bottom: 40px; }
 .section-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
 .section-hdr h3 { font-size: 1.1rem; font-weight: 700; color: #1a472a; }
@@ -125,7 +125,7 @@
 .sp-pop    { font-size: 0.72rem; color: #888; }
 .sp-pop strong { color: #444; }
 
-/* ── Resources ── */
+
 .resources-section h3 { font-size: 1.1rem; font-weight: 700; color: #1a472a; margin-bottom: 16px; }
 .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 10px; }
 .resource-card {

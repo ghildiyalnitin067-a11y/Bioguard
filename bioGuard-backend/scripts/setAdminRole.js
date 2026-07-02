@@ -1,8 +1,3 @@
-/**
- * One-off script: set nitinghildiyal2007@gmail.com role to 'admin'
- * Admin role already inherits all asha_worker (NGO worker) permissions.
- * Run: node scripts/setAdminRole.js
- */
 require('dotenv').config({ path: '../.env' });
 const mongoose = require('mongoose');
 
@@ -20,11 +15,11 @@ async function run() {
   if (!user) {
     console.log(`[Script] User "${EMAIL}" not found — creating admin account...`);
     user = await User.create({
-      name:     'Nitin Ghildiyal',
-      email:    EMAIL,
+      name: 'Nitin Ghildiyal',
+      email: EMAIL,
       password: 'Admin@1234',
-      role:     'admin',
-      state:    'Uttarakhand',
+      role: 'admin',
+      state: 'Uttarakhand'
     });
     console.log(`[Script] ✅ Created admin user: ${EMAIL}`);
   } else {
@@ -53,7 +48,7 @@ async function run() {
   process.exit(0);
 }
 
-run().catch(err => {
+run().catch((err) => {
   console.error('[Script] ❌ Error:', err.message);
   process.exit(1);
 });

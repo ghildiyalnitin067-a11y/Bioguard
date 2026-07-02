@@ -1,50 +1,43 @@
 const express = require('express');
-const jwt     = require('jsonwebtoken');
-const User    = require('../models/User');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 const { protect } = require('../middleware/authMiddleware');
-const router  = express.Router();
+const router = express.Router();
 
-const signToken = id =>
-  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+const signToken = (id) =>
+jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
 
 const sendAuthResponse = (res, statusCode, user, message = '') => {
   const token = signToken(user._id);
   res.status(statusCode).json({
     token,
     user: {
-      id:         user._id,
-      name:       user.name,
-      email:      user.email,
-      role:       user.role,        // ← role always returned
-      state:      user.state,
-      bio:        user.bio,
-      avatar:     user.avatar,
-      reports:    user.reports,
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      state: user.state,
+      bio: user.bio,
+      avatar: user.avatar,
+      reports: user.reports,
       alertsRecv: user.alertsRecv,
-      joined:     user.joined,
+      joined: user.joined
     },
-    message,
+    message
   });
 };
 
-/* ────────────────────────────
-   POST /api/auth/signup
-   Body: { name, email, password, role?, state? }
-   Note: role defaults to 'user'. 
-         Only an existing admin can create asha_worker/admin accounts.
-──────────────────────────── */
 router.post('/signup', async (req, res) => {
   try {
     const { name, email, password, role = 'user', state = 'Assam' } = req.body;
     if (!name || !email || !password)
-      return res.status(400).json({ error: 'Name, email and password are required.' });
+    return res.status(400).json({ error: 'Name, email and password are required.' });
 
-    // Prevent self-assigning elevated roles
     const safeRole = ['asha_worker', 'admin'].includes(role) ? 'user' : role;
 
     const existing = await User.findOne({ email });
     if (existing)
-      return res.status(409).json({ error: 'Email already registered.' });
+    return res.status(409).json({ error: 'Email already registered.' });
 
     const user = await User.create({ name, email, password, role: safeRole, state });
     sendAuthResponse(res, 201, user, 'Account created successfully.');
@@ -53,21 +46,18 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-/* ────────────────────────────
-   POST /api/auth/signin
-──────────────────────────── */
 router.post('/signin', async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password)
-      return res.status(400).json({ error: 'Email and password are required.' });
+    return res.status(400).json({ error: 'Email and password are required.' });
 
     const user = await User.findOne({ email }).select('+password +role');
     if (!user || !(await user.comparePassword(password)))
-      return res.status(401).json({ error: 'Invalid email or password.' });
+    return res.status(401).json({ error: 'Invalid email or password.' });
 
     if (!user.isActive)
-      return res.status(403).json({ error: 'Account deactivated. Contact admin.' });
+    return res.status(403).json({ error: 'Account deactivated. Contact admin.' });
 
     user.lastLogin = new Date();
     await user.save({ validateBeforeSave: false });
@@ -78,21 +68,15 @@ router.post('/signin', async (req, res) => {
   }
 });
 
-/* ────────────────────────────
-   GET /api/auth/me  (protected)
-──────────────────────────── */
 router.get('/me', protect, async (req, res) => {
   res.json({ user: req.user.toPublic() });
 });
 
-/* ────────────────────────────
-   PATCH /api/auth/profile  (protected)
-──────────────────────────── */
 router.patch('/profile', protect, async (req, res) => {
   try {
     const allowed = ['name', 'bio', 'state'];
     const updates = {};
-    allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
+    allowed.forEach((k) => {if (req.body[k] !== undefined) updates[k] = req.body[k];});
 
     const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true });
     res.json({ user: user.toPublic() });
