@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: bioguard-backend
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false   # Set manually in Render dashboard
+      - key: JWT_SECRET
+        sync: false   # Set manually in Render dashboard
+      - key: FRONTEND_URL
+        sync: false   # Set to your frontend URL e.g. https://bioguard.vercel.app
+      - key: GMAIL_USER
+        sync: false   # Optional — for email notifications
+      - key: GMAIL_APP_PASS
+        sync: false   # Optional — for email notifications
+      - key: GOOGLE_CLIENT_ID
+        sync: false   # Optional — for Google OAuth
