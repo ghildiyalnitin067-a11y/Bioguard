@@ -130,6 +130,3 @@ Feel free to check out the [issues page](https://github.com/ghildiyalnitin067-a1
 
 ---
 
-## 📄 License
-
-This project is open-source and available under the [MIT License](LICENSE).
